@@ -1,0 +1,71 @@
+/* Set the font for the entire body */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4; /* Light grey background */
+    color: #333; /* Dark grey text */
+}
+
+/* Style for all headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #35424a; /* Dark blue */
+}
+
+/* Main content area styling */
+.main-container {
+    width: 80%;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.1); /* Subtle shadow around the main content */
+}
+
+/* Links styling */
+a {
+    color: #333;
+    text-decoration: none; /* No underlines on links */
+}
+
+a:hover {
+    color: #555; /* Darker grey on hover */
+}
+
+/* Button styling */
+.button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+.rounded-box {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+    .main-container {
+        width: 100%;
+        padding: 10px;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation-name: fadeIn;
+    animation-duration: 2s;
+}
