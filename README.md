@@ -1,1 +1,1 @@
-flask --app hello run --debug
+flask --app app run --debug
