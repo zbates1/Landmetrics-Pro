@@ -16,6 +16,8 @@ app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should b
 # For local development with SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users_local.db'
 db = SQLAlchemy(app)
+print("Connected to database:", app.config['SQLALCHEMY_DATABASE_URI'])
+
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -32,7 +34,10 @@ class User(UserMixin, db.Model):
 # Before app starts ########################
 @app.before_first_request
 def create_tables():
+    print("Creating tables...")
     db.create_all()
+    print("Tables created.")
+
 
 @login_manager.user_loader
 def load_user(user_id):
