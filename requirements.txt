@@ -1,0 +1,6 @@
+Flask
+Werkzeug
+Flask-SQLAlchemy
+flask_login
+# Flask==2.0.2
+gunicorn

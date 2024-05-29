@@ -3,26 +3,34 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__)
-
 # Configuration: this comes from SQLAlchemy and Flask combined library, documentation: https://flask-sqlalchemy.palletsprojects.com/en/3.1.x/quickstart/#create-the-tables
-app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should be set in env by the following commands to be more secure for production: 
+# app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should be set in env by the following commands to be more secure for production: 
 # export SECRET_KEY=cb24c67ce22b72d4a87600e1e5613e43
 # export FLASK_APP=app.py
 # and then in app.py: app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 # db = SQLAlchemy(app)
 
-# For local development with SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users_local.db'
-db = SQLAlchemy(app)
-print("Connected to database:", app.config['SQLALCHEMY_DATABASE_URI'])
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should be set in env by the following commands to be more secure for production: 
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users_local.db'
 
 
-# Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+    # Your other app configuration here
+
+    # Perform setup tasks here (e.g., create database tables)
+    with app.app_context():
+        db = SQLAlchemy(app)
+        print("Connected to database:", app.config['SQLALCHEMY_DATABASE_URI'])
+
+        # Create the database tables
+        db.create_all()
+
+    return app, db
+
+# Create the app and the database
+app, db = create_app()
 
 # Models
 class User(UserMixin, db.Model):
@@ -31,12 +39,13 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150))  # This should be hashed in a real application
 
 
-# Before app starts ########################
-@app.before_first_request
-def create_tables():
-    print("Creating tables...")
-    db.create_all()
-    print("Tables created.")
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+
 
 
 @login_manager.user_loader
@@ -106,6 +115,6 @@ def signup():
 
 
 if __name__ == '__main__':
-    db.create_all()
+    app = create_app()
     app.run(debug=True)
 
