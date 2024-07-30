@@ -1,4 +1,6 @@
 # Flask Web App Tutorial
+https://github.com/techwithtim/Flask-Web-App-Tutorial/tree/main/website/static
+
 
 ## Setup & Installation
 
