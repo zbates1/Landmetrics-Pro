@@ -3,14 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Configuration: this comes from SQLAlchemy and Flask combined library, documentation: https://flask-sqlalchemy.palletsprojects.com/en/3.1.x/quickstart/#create-the-tables
-# app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should be set in env by the following commands to be more secure for production: 
-# export SECRET_KEY=cb24c67ce22b72d4a87600e1e5613e43
-# export FLASK_APP=app.py
-# and then in app.py: app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
-# db = SQLAlchemy(app)
-
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'cb24c67ce22b72d4a87600e1e5613e43' # -> this should be set in env by the following commands to be more secure for production: 
