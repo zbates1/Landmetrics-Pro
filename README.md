@@ -42,7 +42,7 @@ Access the application here: [**Localhost Link**](http://127.0.0.1:5000)
 - [ ] 📊 **Finalize Data Analysis View**: Enhance the interface for better user experience.
 - [ ] 💾 **Data Export Method**: Implement a secure and efficient data export functionality.
 - [ ] 🐳 **Dockerize Repository**: Setup Docker for consistent development environments (see branches: `tutorial_test` and `main`).
-- [ ] 🔒 **Environment Variables**: Establish secure deployment practices.
+- [ ] 🔒 **Environment Variables**: Establish secure deployment practices. (see 'user_data.py' line 14 to see how best practices for getting env varaibles in your py scripts)
 
 ---
 
