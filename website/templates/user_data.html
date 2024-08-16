@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}User Data{% endblock %}
+
+{% block content %}
+<h1>User Data Visualization</h1>
+
+<canvas id="userDataChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('userDataChart').getContext('2d');
+    const userDataChart = new Chart(ctx, {
+      type: 'line',  // Change this depending on the type of graph you want
+      data: {
+        labels: [1, 2, 3, 4, 5],  // This should match the length of your data arrays
+        datasets: [{
+          label: 'Sample Data 1',
+          data: {{ sample_array_1 | tojson }},
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }, {
+          label: 'Sample Data 2',
+          data: {{ sample_array_2 | tojson }},
+          borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<button id="downloadGraph">Download Graph</button>
+
+<script>
+  document.getElementById('downloadGraph').addEventListener('click', function() {
+    const url = userDataChart.toBase64Image();
+    const link = document.createElement('a');
+    link.download = 'userDataChart.png';
+    link.href = url;
+    link.click();
+  });
+</script>
+
+<button id="downloadData">Download Data</button>
+
+<script>
+  document.getElementById('downloadData').addEventListener('click', function() {
+    const data = {
+      SampleData1: {{ sample_array_1 | tojson }},
+      SampleData2: {{ sample_array_2 | tojson }}
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+    const link = document.createElement('a');
+    link.download = 'userData.json';
+    link.href = dataStr;
+    link.click();
+  });
+</script>
+
+
+{% endblock %}

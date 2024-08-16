@@ -2,6 +2,7 @@
 # This script will collect the data from the SQL database and pass it to the html
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask_login import login_required, current_user
 from .models import User
 from . import db   ## means from __init__.py import db
 
@@ -43,5 +44,13 @@ data_view = Blueprint('data_view', __name__)
 @data_view.route('/user_data', methods=['GET', 'POST'])
 def user_data():
 
+    connect_to_database()
 
-    return render_template("user_data.html") # I will need a data = current_user_data argument to pass the data into the html 
+    sample_array_1 = [1, 2, 3, 4, 5]
+    sample_array_2 = [6, 7, 8, 9, 10]
+
+    return render_template("user_data.html", 
+                           sample_array_1=sample_array_1, 
+                           sample_array_2=sample_array_2,
+                           user=current_user,
+                           first_name=current_user.first_name)

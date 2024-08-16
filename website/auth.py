@@ -63,4 +63,4 @@ def sign_up():
             flash('Account created!', category='success')
             return redirect(url_for('views.home'))
 
-    return render_template("sign_up.html", user=current_user)
+    return render_template("sign_up.html", user=current_user) # user=current_user was here in the template repo, but I actually don't think it needs to be there

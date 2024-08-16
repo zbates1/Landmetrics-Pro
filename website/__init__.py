@@ -15,10 +15,12 @@ def create_app():
 
     from .views import views
     from .auth import auth
+    from .user_data import data_view # Zane Addition
 
     # Register Blueprints, Views and Auth (the two files containing the routes)
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
+    app.register_blueprint(data_view, url_prefix='/') # Zane Addition
 
     from .models import User, Note
     
