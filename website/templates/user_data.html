@@ -1,32 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}User Data{% endblock %}
+{% block title %}Landmetrics Pro Data Visualization{% endblock %}
 
 {% block content %}
-<h1>User Data Visualization</h1>
+<h1>Landmetrics Pro Data Visualization</h1>
+
+<!-- Dropdown to select the type of graph -->
+<select id="graphType" class="custom-select" onchange="updateGraph()">
+  <option value="line">Line Chart</option>
+  <option value="bar">Bar Chart</option>
+</select>
 
 <canvas id="userDataChart"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    updateGraph('line'); // Ensures the graph initializes as a line chart on page load
+  });
+
+function updateGraph(selectedType) {
     const ctx = document.getElementById('userDataChart').getContext('2d');
-    const userDataChart = new Chart(ctx, {
-      type: 'line',  // Change this depending on the type of graph you want
-      data: {
-        labels: [1, 2, 3, 4, 5],  // This should match the length of your data arrays
-        datasets: [{
-          label: 'Sample Data 1',
-          data: {{ sample_array_1 | tojson }},
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1
-        }, {
-          label: 'Sample Data 2',
-          data: {{ sample_array_2 | tojson }},
-          borderColor: 'rgb(255, 99, 132)',
-          tension: 0.1
-        }]
-      },
+    const graphType = selectedType || document.getElementById('graphType').value;
+    const chartData = {
+      labels: [1, 2, 3, 4, 5],
+      datasets: [{
+        label: 'Sample Data 1',
+        data: {{ sample_array_1 | tojson }},
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        tension: 0.1,
+        fill: graphType === 'line' ? false : true
+      }, {
+        label: 'Sample Data 2',
+        data: {{ sample_array_2 | tojson }},
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        tension: 0.1,
+        fill: graphType === 'line' ? false : true
+      }]
+    };
+
+    // Clear existing canvas to redraw
+    if (window.userDataChart && typeof window.userDataChart.destroy === 'function') {
+        window.userDataChart.destroy();
+    }
+
+    window.userDataChart = new Chart(ctx, {
+      type: graphType,
+      data: chartData,
       options: {
         scales: {
           y: {
@@ -35,14 +58,14 @@
         }
       }
     });
-  });
+}
+
 </script>
 
-<button id="downloadGraph">Download Graph</button>
-
+<button id="downloadGraph" class="btn btn-primary">Download Graph</button>
 <script>
   document.getElementById('downloadGraph').addEventListener('click', function() {
-    const url = userDataChart.toBase64Image();
+    const url = window.userDataChart.toBase64Image();
     const link = document.createElement('a');
     link.download = 'userDataChart.png';
     link.href = url;
@@ -50,8 +73,7 @@
   });
 </script>
 
-<button id="downloadData">Download Data</button>
-
+<button id="downloadData" class="btn btn-secondary">Download Data</button>
 <script>
   document.getElementById('downloadData').addEventListener('click', function() {
     const data = {
@@ -65,6 +87,5 @@
     link.click();
   });
 </script>
-
 
 {% endblock %}

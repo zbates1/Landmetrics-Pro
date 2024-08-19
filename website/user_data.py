@@ -46,6 +46,11 @@ def user_data():
 
     connect_to_database()
 
+    graph_type = request.args.get('graph_type', 'default_type')
+    # Logic to select data based on the graph_type
+    # sample_data = get_graph_data(graph_type)  # This function would handle different data scenarios
+
+
     sample_array_1 = [1, 2, 3, 4, 5]
     sample_array_2 = [6, 7, 8, 9, 10]
 
@@ -53,4 +58,5 @@ def user_data():
                            sample_array_1=sample_array_1, 
                            sample_array_2=sample_array_2,
                            user=current_user,
-                           first_name=current_user.first_name)
+                           first_name=current_user.first_name,
+                           graph_type=graph_type)

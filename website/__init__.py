@@ -3,13 +3,16 @@ from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
 
+from .config import Config # this is to setup the config.py for env variables
+
 db = SQLAlchemy()
 DB_NAME = "database.db"
 
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs'
+    # app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # now handled by the import above and this line below
+    app.config.from_object(Config)
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
 
