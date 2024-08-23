@@ -56,7 +56,9 @@
     </div>
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
-    <div class="container">{% block content %} {% endblock %}</div>
+
+    <div class="container">{% block content %}{% endblock %}</div>
+<!-- Scripts -->
     <script
       src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
       integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
@@ -73,6 +75,41 @@
       crossorigin="anonymous"
     ></script>
 
+<!-- Main content area -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Reduced size Contact Form on the Left, if still needed -->
+        <div class="col-md-4">
+            <div class="contact-form-wrapper">
+                <form class="form-inline">
+                    <!-- Simplified form fields if necessary -->
+                </form>
+            </div>
+        </div>
+
+        <!-- Detailed Paragraph and Google Maps on the Right -->
+        <div class="col-md-8">
+            <div class="info-section">
+                <p>Your descriptive text here, possibly more detailed than what would be in a fixed form.</p>
+                <div id="map" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Contact Form at the Bottom Right Corner, maybe hidden on the contact page -->
+<div class="contact-form-wrapper" style="display: none;"> <!-- Use JS to toggle visibility -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="navbar-brand">Quick Contact</div>
+        <form class="form-inline">
+            <!-- Form content here -->
+        </form>
+    </nav>
+</div>
+
+
+
+
 {% block javascript %}
     <script type="text/javascript">
       function deleteNote(noteId) {
@@ -85,5 +122,59 @@
   }
 </script>
 {% endblock %}
+
+<style>
+  .contact-form-wrapper {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 100%; /* This ensures it spans the bottom */
+    z-index: 1000; /* Keeps it on top */
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+  }
+
+  .contact-form-wrapper .navbar {
+    margin-bottom: 0; /* Remove any default margin */
+    padding: 10px; /* Adds padding to give space inside the navbar */
+  }
+
+  .contact-form-wrapper textarea {
+    height: 72px; /* 38 Aligns height with input fields */
+  }
+
+  .container-fluid {
+    padding-top: 20px;
+}
+
+  .info-section p {
+      margin-bottom: 20px;
+  }
+</style>
+
+  <footer>
+    <small>© <script>document.write(new Date().getFullYear())</script> Landmetrics Pro. All Rights Reserved.</small>
+  </footer>
+
+<script>
+function initMap() {
+    var location = {lat: -34.397, lng: 150.644}; // Example coordinates
+    var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 8,
+        center: location
+    });
+    var marker = new google.maps.Marker({
+        position: location,
+        map: map
+    });
+}
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+</script>
+
+
   </body>
 </html>
