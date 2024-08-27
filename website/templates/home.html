@@ -1,22 +1,185 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
+
 {% block content %}
-<h1 align="center">Notes</h1>
-<ul class="list-group list-group-flush" id="notes">
-  {% for note in user.notes %}
-  <li class="list-group-item">
-    {{ note.data }}
-    <button type="button" class="close" onClick="deleteNote({{ note.id }})">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </li>
-  {% endfor %}
-</ul>
-<form method="POST">
-  <textarea name="note" id="note" class="form-control"></textarea>
-  <br />
-  <div align="center">
-    <button type="submit" class="btn btn-primary">Add Note</button>
-  </div>
-</form>
+<!-- Hero Section with Bootstrap for carosel-->
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+
+<section id="hero" class="vh-100">
+    <div id="heroCarousel" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/stock_image_1.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Your Product Name</h1>
+                        <p>Introducing innovation to everyday life.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/stock_image_2.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Explore More</h1>
+                        <p>Discover the features.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/stock_image_3.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Join Us</h1>
+                        <p>Become part of our community.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Carousel controls -->
+        <a class="carousel-control-prev" href="#heroCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#heroCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+</section>
+
+
+<!-- About Us/Values -->
+<section id="about" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2>About Us</h2>
+                <p>Our mission is to deliver exceptional products that improve daily life. We believe in sustainability, quality, and community.</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/about_us.jpg') }}" alt="About Us" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Innovation/Product -->
+<section id="innovation" class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/innovation.jpg') }}" alt="Innovation" class="img-fluid">
+            </div>
+            <div class="col-md-6">
+                <h2>Innovation</h2>
+                <p>Our products are at the cutting edge of technology, designed to be both effective and intuitive.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Problem, Solution -->
+<section id="problem-solution" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2>Problem Statement</h2>
+                <p>The issue that many face daily...</p>
+                <h2>Solution</h2>
+                <p>Our product solves this by...</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/problem_solution.jpg') }}" alt="Problem and Solution" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News, Resources -->
+<section id="news" class="py-5 bg-secondary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/news_resources.jpg') }}" alt="News and Resources" class="img-fluid">
+            </div>
+            <div class="col-md-6">
+                <h2>News and Resources</h2>
+                <ul>
+                    <li><a href="#" class="text-white">Link to latest news article</a></li>
+                    <li><a href="#" class="text-white">Link to resource</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section id="testimonials" class="py-5" style="background-color: #2F4F4F;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <blockquote>"This product has changed my life!" - Jane Doe</blockquote>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/testimonials.jpg') }}" alt="Testimonials" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Awards -->
+<section id="awards" class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/awards.jpg') }}" alt="Awards" class="img-fluid">
+            </div>
+            <div class="col-md-6">
+                <h2>Awards</h2>
+                <p>Winner of the 2024 Best Innovation Award.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section id="statistics" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2>Impact Statistics</h2>
+                <p>Over 1,000,000 users worldwide and growing.</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/statistics.jpg') }}" alt="Statistics" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Us -->
+<section id="contact" class="py-5 bg-secondary text-white">
+    <div class="container">
+        <h2>Contact Us</h2>
+        <form action="/submit-contact-form" method="post" class="mt-4">
+            <div class="form-group">
+                <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" class="form-control" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+                <textarea name="message" class="form-control" placeholder="Your Message" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

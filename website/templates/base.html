@@ -46,7 +46,6 @@
 </style>
 
 
-
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %} {% for category, message in messages %} {% if category ==
     'error' %}
@@ -65,8 +64,9 @@
     </div>
     {% endif %} {% endfor %} {% endif %} {% endwith %}
 
+    {% block content %}{% endblock %}
 
-    <div class="container">{% block content %}{% endblock %}</div>
+
 <!-- Scripts -->
     <script
       src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
@@ -84,55 +84,5 @@
       crossorigin="anonymous"
     ></script>
 
-<!-- Contact Form at the Bottom of the Page -->
-<div class="contact-form-wrapper"> <!-- Clearly identifies the container's purpose -->
-    <nav class="navbar navbar-expand-lg" style="background-color: rgba(144, 238, 144, 0.85);"> <!-- Light green transparent -->
-        <div class="navbar-brand">Quick Contact</div>
-        <form class="form-inline mx-auto">
-            <div class="form-group mx-2">
-                <input type="text" class="form-control" placeholder="Your Name" required>
-            </div>
-            <div class="form-group mx-2">
-                <input type="email" class="form-control" placeholder="Your Email" required>
-            </div>
-            <div class="form-group mx-2">
-                <textarea class="form-control" placeholder="Your Message" rows="1" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Send</button>
-        </form>
-    </nav>
-</div>
-
 <!-- Link to the deleteNote Function -->
 <script src="{{ url_for('static', filename='index.js') }}"></script>
-
-<style>
-  .contact-form-wrapper {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%; /* Full width */
-    z-index: 1000; /* Keeps it on top */
-    box-shadow: 0 -4px 6px rgba(0,0,0,0.1); /* Optional: Adds a subtle shadow for better separation from page content */
-  }
-
-  .contact-form-wrapper .navbar {
-    margin-bottom: 0; /* Remove any default margin */
-    padding: 10px; /* Adds padding inside the navbar for spacing */
-  }
-
-  .container-fluid {
-    padding-top: 20px;
-  }
-
-  .info-section p {
-      margin-bottom: 20px;
-  }
-
-  footer {
-    text-align: center;
-    padding: 10px;
-    position: relative; /* Ensures it does not overlap with the fixed contact form */
-    width: 100%;
-  }
-</style>
