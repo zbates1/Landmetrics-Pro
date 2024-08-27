@@ -8,7 +8,7 @@
   <title>{% block title %}Home{% endblock %}</title>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark custom-color">
       <a class="navbar-brand" href="/">
         <img src="{{ url_for('static', filename='images/landmetrics_logo.jpg') }}" alt="LandMetrics Logo" height=40>
       </a>
@@ -37,6 +37,15 @@
       </div>
     </div>
   </nav>
+
+<!-- Styles for the navbar to change from dark to blue -->
+<style>
+  .custom-color {
+    background-color: #556B2F;
+}
+</style>
+
+
 
     {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %} {% for category, message in messages %} {% if category ==
@@ -75,106 +84,55 @@
       crossorigin="anonymous"
     ></script>
 
-<!-- Main content area -->
-<div class="container-fluid">
-    <div class="row">
-        <!-- Reduced size Contact Form on the Left, if still needed -->
-        <div class="col-md-4">
-            <div class="contact-form-wrapper">
-                <form class="form-inline">
-                    <!-- Simplified form fields if necessary -->
-                </form>
-            </div>
-        </div>
-
-        <!-- Detailed Paragraph and Google Maps on the Right -->
-        <div class="col-md-8">
-            <div class="info-section">
-                <p>Your descriptive text here, possibly more detailed than what would be in a fixed form.</p>
-                <div id="map" style="height: 400px;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Floating Contact Form at the Bottom Right Corner, maybe hidden on the contact page -->
-<div class="contact-form-wrapper" style="display: none;"> <!-- Use JS to toggle visibility -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- Contact Form at the Bottom of the Page -->
+<div class="contact-form-wrapper"> <!-- Clearly identifies the container's purpose -->
+    <nav class="navbar navbar-expand-lg" style="background-color: rgba(144, 238, 144, 0.85);"> <!-- Light green transparent -->
         <div class="navbar-brand">Quick Contact</div>
-        <form class="form-inline">
-            <!-- Form content here -->
+        <form class="form-inline mx-auto">
+            <div class="form-group mx-2">
+                <input type="text" class="form-control" placeholder="Your Name" required>
+            </div>
+            <div class="form-group mx-2">
+                <input type="email" class="form-control" placeholder="Your Email" required>
+            </div>
+            <div class="form-group mx-2">
+                <textarea class="form-control" placeholder="Your Message" rows="1" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
         </form>
     </nav>
 </div>
 
-
-
-
-{% block javascript %}
-    <script type="text/javascript">
-      function deleteNote(noteId) {
-  fetch("/delete-note", {
-    method: "POST",
-    body: JSON. stringify({ noteId: noteId }),
-  }).then((_res) => {
-    window.location.href = "/";
-  });
-  }
-</script>
-{% endblock %}
+<!-- Link to the deleteNote Function -->
+<script src="{{ url_for('static', filename='index.js') }}"></script>
 
 <style>
   .contact-form-wrapper {
     position: fixed;
     bottom: 0;
-    right: 0;
-    width: 100%; /* This ensures it spans the bottom */
+    left: 0;
+    width: 100%; /* Full width */
     z-index: 1000; /* Keeps it on top */
-    padding: 15px;
-    background-color: #fff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-
+    box-shadow: 0 -4px 6px rgba(0,0,0,0.1); /* Optional: Adds a subtle shadow for better separation from page content */
   }
 
   .contact-form-wrapper .navbar {
     margin-bottom: 0; /* Remove any default margin */
-    padding: 10px; /* Adds padding to give space inside the navbar */
-  }
-
-  .contact-form-wrapper textarea {
-    height: 72px; /* 38 Aligns height with input fields */
+    padding: 10px; /* Adds padding inside the navbar for spacing */
   }
 
   .container-fluid {
     padding-top: 20px;
-}
+  }
 
   .info-section p {
       margin-bottom: 20px;
   }
+
+  footer {
+    text-align: center;
+    padding: 10px;
+    position: relative; /* Ensures it does not overlap with the fixed contact form */
+    width: 100%;
+  }
 </style>
-
-  <footer>
-    <small>© <script>document.write(new Date().getFullYear())</script> Landmetrics Pro. All Rights Reserved.</small>
-  </footer>
-
-<script>
-function initMap() {
-    var location = {lat: -34.397, lng: 150.644}; // Example coordinates
-    var map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 8,
-        center: location
-    });
-    var marker = new google.maps.Marker({
-        position: location,
-        map: map
-    });
-}
-</script>
-<script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
-</script>
-
-
-  </body>
-</html>
