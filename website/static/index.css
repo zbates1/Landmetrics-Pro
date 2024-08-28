@@ -1,0 +1,17 @@
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    background-color: #c42d2d; /* Adds background color */
+    border-radius: 30%; /* Makes it circular */
+    padding: 10px; /* Gives some spacing inside the circle */
+}
+
+/* Extend the clickable area of the controls */
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%; /* Increase the width to ensure easier clicking */
+}
+
+/* Optional: Increase the size of the arrows for better visibility and interaction */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-size: 200%; /* Makes the arrow icons larger */
+}
