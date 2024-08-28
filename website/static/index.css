@@ -1,14 +1,10 @@
 .footer {
     position: fixed;    
-    left: 100;
     bottom: 0;
     width: 100%;
-    z-index: 10; /* Ensures the footer is above other content */
-    height: 25px;
+    height: 2.5%;
     text-size-adjust: 100%;
-    text-align: left;
-    background-color: #f5f5f5;
-    line-height: 1px;
+    line-height: 5%;
 }
 
 #combinedCarousel .carousel-indicators li {
@@ -16,5 +12,5 @@
 }
 
 #combinedCarousel .carousel-indicators .active {
-    background-color: #ddd; /* A different color for the active indicator */
+    background-color: #3f0fde; /* A different color for the active indicator */
 }
