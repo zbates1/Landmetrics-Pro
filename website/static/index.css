@@ -1,17 +1,20 @@
-.carousel-control-prev-icon, .carousel-control-next-icon {
-    background-color: #c42d2d; /* Adds background color */
-    border-radius: 30%; /* Makes it circular */
-    padding: 10px; /* Gives some spacing inside the circle */
+.footer {
+    position: fixed;    
+    left: 100;
+    bottom: 0;
+    width: 100%;
+    z-index: 10; /* Ensures the footer is above other content */
+    height: 25px;
+    text-size-adjust: 100%;
+    text-align: left;
+    background-color: #f5f5f5;
+    line-height: 1px;
 }
 
-/* Extend the clickable area of the controls */
-.carousel-control-prev,
-.carousel-control-next {
-    width: 5%; /* Increase the width to ensure easier clicking */
+#combinedCarousel .carousel-indicators li {
+    background-color: #bb1d1d; /* Change #yourDesiredColor to your preferred color */
 }
 
-/* Optional: Increase the size of the arrows for better visibility and interaction */
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-    background-size: 200%; /* Makes the arrow icons larger */
+#combinedCarousel .carousel-indicators .active {
+    background-color: #ddd; /* A different color for the active indicator */
 }

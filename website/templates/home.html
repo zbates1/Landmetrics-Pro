@@ -121,69 +121,129 @@
     </div>
 </section>
 
-<!-- Awards and Testimonials -->
+<!-- Combined Section for Testimonials and Awards -->
 <section id="combined-section" class="py-5 bg-light">
-    <div class="container-fluid">
-        <div id="combinedCarousel" class="carousel slide" data-ride="carousel" style="margin-left: 50px;">
+    <div class="container">
+        <div id="combinedCarousel" class="carousel slide" data-ride="carousel">
             <!-- Carousel Indicators -->
             <ol class="carousel-indicators">
                 <li data-target="#combinedCarousel" data-slide-to="0" class="active"></li>
                 <li data-target="#combinedCarousel" data-slide-to="1"></li>
+                <li data-target="#combinedCarousel" data-slide-to="2"></li>
+                <li data-target="#combinedCarousel" data-slide-to="3"></li>
             </ol>
+
             <!-- Carousel Inner -->
             <div class="carousel-inner">
-                <!-- Testimonials Carousel Slide -->
+                <!-- First Slide: Testimonial 1 -->
                 <div class="carousel-item active">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <img src="{{ url_for('static', filename='images/testimonial_1.jpg') }}" alt="Testimonials 1" class="img-fluid">
+                            <img src="{{ url_for('static', filename='images/testimonial_1.jpg') }}" alt="Testimonial 1" class="img-fluid">
                         </div>
                         <div class="col-md-6">
-                            <img src="{{ url_for('static', filename='images/testimonial_2.jpg') }}" alt="Testimonials 2" class="img-fluid">
+                            <blockquote class="blockquote">
+                                <p class="mb-0">"This product has changed my life!"</p>
+                                <footer class="blockquote-footer">Jane Doe</footer>
+                            </blockquote>
                         </div>
                     </div>
                 </div>
-                <!-- Awards Carousel Slide -->
+
+                <!-- Second Slide: Testimonial 2 -->
                 <div class="carousel-item">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <img src="{{ url_for('static', filename='images/award_1.jpg') }}" alt="Awards 1" class="img-fluid">
+                            <img src="{{ url_for('static', filename='images/testimonial_2.jpg') }}" alt="Testimonial 2" class="img-fluid">
                         </div>
                         <div class="col-md-6">
-                            <img src="{{ url_for('static', filename='images/award_2.jpg') }}" alt="Awards 2" class="img-fluid">
+                            <blockquote class="blockquote">
+                                <p class="mb-0">"Absolutely fantastic results!"</p>
+                                <footer class="blockquote-footer">John Smith</footer>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Third Slide: Award 1 -->
+                <div class="carousel-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/award_1.jpg') }}" alt="Award 1" class="img-fluid">
+                        </div>
+                        <div class="col-md-6">
+                            <h3>Best Innovation Award 2024</h3>
+                            <p>We are honored to receive the Best Innovation Award for our groundbreaking product.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fourth Slide: Award 2 -->
+                <div class="carousel-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/award_2.jpg') }}" alt="Award 2" class="img-fluid">
+                        </div>
+                        <div class="col-md-6">
+                            <h3>Top Industry Recognition</h3>
+                            <p>Our commitment to excellence has earned us top recognition in the industry.</p>
                         </div>
                     </div>
                 </div>
             </div>
-              <!-- Carousel Controls with Inline CSS for edge positioning -->
-              <a class="carousel-control-prev" href="#combinedCarousel" role="button" data-slide="prev" style="left: 0; width: 5%;">
-                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                  <span class="sr-only">Previous</span>
-              </a>
-              <a class="carousel-control-next" href="#combinedCarousel" role="button" data-slide="next" style="right: 0; width: 5%;">
-                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                  <span class="sr-only">Next</span>
-              </a>
+
+            <!-- Optional: Remove controls if you don't want them -->
+            <a class="carousel-control-prev" href="#combinedCarousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#combinedCarousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
         </div>
     </div>
 </section>
 
+
 <!-- Contact Us -->
 <section id="contact" class="py-5 bg-secondary text-white">
     <div class="container">
-        <h2>Contact Us</h2>
-        <form action="/submit-contact-form" method="post" class="mt-4">
-            <div class="form-group">
-                <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+        <div class="row">
+            <!-- Location Information -->
+            <div class="col-md-6">
+                <h3>Our Location</h3>
+                <p>123 Business Rd.,<br> Business City, BC 54321</p>
+                <p>Phone: (123) 456-7890</p>
+                <p>Email: info@example.com</p>
+                <!-- Embed Google Maps or other content if needed -->
             </div>
-            <div class="form-group">
-                <input type="email" name="email" class="form-control" placeholder="Your Email" required>
+
+            <!-- Contact Form -->
+            <div class="col-md-6">
+                <h2>Contact Us</h2>
+                <form action="/submit-contact-form" method="post" class="mt-4">
+                    <div class="form-group">
+                        <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" class="form-control" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="message" class="form-control" placeholder="Your Message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
             </div>
-            <div class="form-group">
-                <textarea name="message" class="form-control" placeholder="Your Message" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Send</button>
-        </form>
+        </div>
     </div>
+    <!-- Footer for Trademark -->
+<footer class="footer bg-dark text-white mt-5">
+    <div class="container text-right py-3">
+        © 2024 Landmetrics Pro. All rights reserved.
+    </div>
+</footer>
+
 </section>
+
 {% endblock %}
