@@ -5,7 +5,7 @@
 ## Overview
 **Landmetrics Pro** facilitates physical rehabilitation through advanced data analytics. Our device uploads data to a remote server, allowing users to analyze their physical rehabilitation progress.
 
-![Image Alt text](./website/static/images/example_usage_stock_3.jpg)
+![Image Alt text](./website/static/images/example_usage_stock_3.png)
 
 
 - **Sign In**: After signing in, access and export your curated data directly from our web platform.
