@@ -15,9 +15,10 @@ DB_NAME = "database.db"
 
 def create_app():
     app = Flask(__name__)
-    # app.config['SECRET_KEY'] = 'hjshjhdjah kjshkjdhjs' # now handled by the import above and this line below
     app.config.from_object(Config)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL'] # This is needed, and doesn't get set in the previous line
+    print("Database Path:", app.config['SQLALCHEMY_DATABASE_URI'])
+
     db.init_app(app)
 
     from .views import views
