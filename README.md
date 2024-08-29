@@ -5,7 +5,7 @@
 ## Overview
 **Landmetrics Pro** facilitates physical rehabilitation through advanced data analytics. Our device uploads data to a remote server, allowing users to analyze their physical rehabilitation progress.
 
-![Image Alt text](./website/static/images/landmetrics_concept.png)
+![Image Alt text](./website/static/images/example_usage_stock_3.jpg)
 
 
 - **Sign In**: After signing in, access and export your curated data directly from our web platform.
@@ -29,6 +29,72 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+## Running the Application with Docker and Docker Compose
+
+This project supports both Docker and Docker Compose for easy setup and deployment. Below are the instructions on how to utilize these tools in development and production environments.
+
+### Prerequisites
+
+Before you begin, ensure you have both Docker and Docker Compose installed on your machine. These tools are used to create containers and manage multi-container applications.
+
+### Docker
+
+You can build and run the application using Docker. Here are the basic commands:
+
+1. **Building the Docker Image**
+
+   Build the Docker image using the following command:
+
+```bash
+   docker build -t my-flask-app .
+```
+
+   This command builds a Docker image named my-flask-app based on the instructions in your Dockerfile.
+
+2. **Running the Container**
+
+   Run your application by starting a container from the image:
+
+```bash
+   docker run -p 5000:5000 --name my-running-app my-flask-app
+```
+
+   This command runs the container and maps port 5000 of the container to port 5000 on your host, allowing you to access the application via http://localhost:5000.
+
+### Docker Compose
+
+Docker Compose allows you to manage the application with its services defined in the docker-compose.yml file.
+
+**Development Environment**
+To start the development environment, use the following command:
+
+```bash
+docker-compose up app
+```
+
+This will start the application in development mode, with live reloads and debugging enabled.
+
+**Production Environment**
+
+To deploy the application in a production environment, use:
+
+```bash
+docker-compose up app-prod
+```
+
+This will start the application using Gunicorn, optimized for production. Note that this setup is still in the production testing phase and may require further adjustments before a full production deployment.
+
+**Stopping and Removing Containers**
+
+To stop the running containers and remove them, you can use the following Docker Compose command:
+
+```bash
+docker-compose down
+```
+
+This command stops all the running services defined in your docker-compose.yml file and removes the containers, networks, and volumes created by them.
+
 
 ## 🖥 Viewing The App
 
