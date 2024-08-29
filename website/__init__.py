@@ -5,6 +5,7 @@ from flask_login import LoginManager
 
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+from werkzeug.security import generate_password_hash
 
 from .config import Config # this is to setup the config.py for env variables
 
@@ -44,9 +45,7 @@ def create_app():
     @login_manager.user_loader
     def load_user(id):
         return User.query.get(int(id))
-
     return app
-
 
 def create_database(app):
     if not path.exists('website/' + DB_NAME):

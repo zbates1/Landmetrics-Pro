@@ -2,6 +2,8 @@ from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
 
+from sqlalchemy import event
+from werkzeug.security import generate_password_hash
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,3 +18,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     first_name = db.Column(db.String(150))
     notes = db.relationship('Note')
+
+@event.listens_for(User.password, 'set', retval=True)
+def hash_user_password(target, value, oldvalue, initiator):
+    if value != oldvalue:
+        return generate_password_hash(value)
+    return value
+
