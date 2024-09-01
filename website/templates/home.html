@@ -4,14 +4,6 @@
 {% block content %}
 <!-- Hero Section with Bootstrap for carosel-->
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='about_us_values.css') }}">
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
-
 <section id="hero" class="vh-100">
     <div id="heroCarousel" class="carousel slide" data-ride="carousel">
         <div class="carousel-inner">
@@ -82,7 +74,7 @@
             <div class="col-md-6">
                 <img src="{{ url_for('static', filename='images/example_usage_stock_2.png') }}" alt="Innovation" class="img-fluid">
             </div>
-            <div class="col-md-6">
+            <div id="innovation-text" class="col-md-6">
                 <h2>Innovation</h2>
                 <p>Our products are at the cutting edge of technology, designed to be both effective and intuitive.</p>
             </div>
@@ -114,7 +106,7 @@
             <div class="col-md-6">
                 <img src="{{ url_for('static', filename='images/news_resources.jpg') }}" alt="News and Resources" class="img-fluid">
             </div>
-            <div class="col-md-6">
+            <div id="news-text" class="col-md-6">
                 <h2>News and Resources</h2>
                 <ul>
                     <li><a href="#" class="text-black">Link to latest news article</a></li>
@@ -142,7 +134,7 @@
                 <!-- First Slide: Testimonial 1 -->
                 <div class="carousel-item active">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div id="test-award-images" class="col-md-6">
                             <img src="{{ url_for('static', filename='images/testimonial_1.jpg') }}" alt="Testimonial 1" class="img-fluid">
                         </div>
                         <div id ="combined-text" class="col-md-4">
@@ -159,7 +151,7 @@
                 <!-- Second Slide: Testimonial 2 -->
                 <div class="carousel-item">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div id="test-award-images" class="col-md-6">
                             <img src="{{ url_for('static', filename='images/testimonial_2.jpg') }}" alt="Testimonial 2" class="img-fluid">
                         </div>
                         <div id="combined-text" class="col-md-4">
@@ -176,7 +168,7 @@
                 <!-- Third Slide: Award 1 -->
                 <div class="carousel-item">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div id="test-award-images" class="col-md-6">
                             <img src="{{ url_for('static', filename='images/award_1.jpg') }}" alt="Award 1" class="img-fluid">
                         </div>
                         <div id="combined-text" class="col-md-4">
@@ -191,7 +183,7 @@
                 <!-- Fourth Slide: Award 2 -->
                 <div class="carousel-item">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
+                        <div id="test-award-images" class="col-md-6">
                             <img src="{{ url_for('static', filename='images/award_2.jpg') }}" alt="Award 2" class="img-fluid">
                         </div>
                         <div id="combined-text" class="col-md-4">
@@ -211,8 +203,8 @@
     <div class="container">
         <div class="row">
             <!-- Location Information -->
-            <div class="col-md-6">
-                <h3>Our Location</h3>
+            <div id="location-text" class="col-md-6">
+                <h2>Our Location</h2>
                 <p>123 Business Rd.,<br> Business City, BC 54321</p>
                 <p>Phone: (123) 456-7890</p>
                 <p>Email: info@example.com</p>
@@ -220,7 +212,7 @@
             </div>
 
             <!-- Contact Form -->
-            <div class="col-md-6">
+            <div id="contact-text" class="col-md-6">
                 <h2>Contact Us</h2>
                 <form action="/submit-contact-form" method="post" class="mt-4">
                     <div class="form-group">
