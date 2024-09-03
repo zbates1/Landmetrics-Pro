@@ -1,0 +1,80 @@
+/* Styles for the Table displaying devices */
+#outputTable {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+#outputTable th, #outputTable td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+#outputTable thead th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+#outputTable tbody + tbody {
+    border-top: 2px solid #dee2e6;
+}
+
+/* Buttons for actions within the table */
+button {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.button-save {
+    background-color: #007bff; /* Blue */
+}
+
+.button-delete {
+    background-color: #dc3545; /* Red */
+}
+
+/* Form styling for device registration */
+#formContainer {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#formContainer label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#formContainer input,
+#formContainer textarea {
+    width: 300px;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Styling for Add Device Button */
+#formContainer button {
+    margin: 10px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+#formContainer button:hover {
+    background-color: #45a049;
+}

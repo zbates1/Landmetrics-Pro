@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import CSRFProtect  # Import CSRFProtect
 from os import path
 from flask_login import LoginManager
 
@@ -19,6 +20,9 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL'] # This is needed, and doesn't get set in the previous line
     print("Database Path:", app.config['SQLALCHEMY_DATABASE_URI'])
 
+    csrf = CSRFProtect(app)
+    csrf.init_app(app)
+
     db.init_app(app)
 
     from .views import views
@@ -30,7 +34,7 @@ def create_app():
     app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(data_view, url_prefix='/') # Zane Addition
 
-    from .models import User, Note
+    from .models import User, Note, Device
     
     with app.app_context():
         db.create_all()
@@ -42,6 +46,7 @@ def create_app():
     # Admin setup
     admin = Admin(app)
     admin.add_view(ModelView(User, db.session))
+    admin.add_view(ModelView(Device, db.session))
 
     @login_manager.user_loader
     def load_user(id):

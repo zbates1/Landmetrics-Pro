@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Register Device{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='device_styles.css') }}">
+
+<body>
+    <h1 style="color: green;">
+        Landmetrics Pro
+    </h1>
+    <h2>Device Management</h2>
+
+    <div id="formContainer">
+        <label for="nameInput">Device Nickname:</label>
+        <input type="text" id="nameInput" placeholder="Enter Device Name...">
+        
+        <label for="typeInput">Device Type:</label>
+        <input type="text" id="typeInput" placeholder="Enter Device Type...">
+        
+        <label for="serialInput">Serial Number:</label>
+        <input type="text" id="serialInput" placeholder="Enter Serial Number...">
+        
+        <br>
+        <button onclick="addDevice()">Add</button>
+    </div>
+
+    <table id="deviceTable">
+        <thead>
+            <tr>
+                <th>Device Nickname</th>
+                <th>Device Type</th>
+                <th>Serial Number</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Device rows will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        var csrfToken = "{{ csrf_token }}";
+    </script>
+    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchDevices();
+        });
+
+        function fetchDevices() {
+            fetch('/get-devices')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('deviceTable').getElementsByTagName('tbody')[0];
+                table.innerHTML = ""; // Clear previous rows
+                data.forEach(device => {
+                    let row = table.insertRow();
+                    row.insertCell(0).innerHTML = device.name;
+                    row.insertCell(1).innerHTML = device.type;
+                    row.insertCell(2).innerHTML = device.serial_number;
+                    row.insertCell(3).innerHTML =
+                        `<button onclick="editDevice(${device.id}, this)">Edit</button>` +
+                        `<button onclick="deleteDevice(${device.id}, this)">Delete</button>`;
+                });
+            });
+        }
+
+        function addDevice() {
+            let name = document.getElementById("nameInput").value;
+            let type = document.getElementById("typeInput").value;
+            let serial = document.getElementById("serialInput").value;
+            
+            fetch('/devices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken  // Include the CSRF token here
+                },
+                body: JSON.stringify({name: name, type: type, serial_number: serial})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchDevices(); // Reload devices
+                } else {
+                    alert(data.error || "Failed to add device");
+                }
+            });
+        }
+
+        function deleteDevice(deviceId, button) {
+            fetch('/delete-device', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({deviceId: deviceId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let row = button.parentNode.parentNode;
+                    row.parentNode.removeChild(row);
+                } else {
+                    alert(data.error || "Failed to delete device");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function editDevice(deviceId, button) {
+            let row = button.parentNode.parentNode;
+            let nameInput = prompt("Enter new device name:", row.cells[0].innerHTML);
+            let typeInput = prompt("Enter new device type:", row.cells[1].innerHTML);
+            let serialInput = prompt("Enter new serial number:", row.cells[2].innerHTML);
+
+            if (nameInput && typeInput && serialInput) { // Ensure all inputs are not empty
+                fetch('/edit-device', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({id: deviceId, name: nameInput, type: typeInput, serial_number: serialInput})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        row.cells[0].innerHTML = nameInput;
+                        row.cells[1].innerHTML = typeInput;
+                        row.cells[2].innerHTML = serialInput;
+                    } else {
+                        alert(data.error || "Failed to update device");
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert("All fields must be filled out.");
+            }
+        }
+    </script>
+</body>
+
+{% endblock %}

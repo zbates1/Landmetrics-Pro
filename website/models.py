@@ -17,7 +17,22 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
     first_name = db.Column(db.String(150))
-    notes = db.relationship('Note')
+    notes = db.relationship('Note', backref='author', lazy=True)
+    devices = db.relationship('Device', backref='owner', lazy=True)  # This allows access to a user's devices
+
+    def __repr__(self):
+        return f'<User {self.email}>'
+
+class Device(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150))
+    type = db.Column(db.String(150))
+    serial_number = db.Column(db.String(150), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # ForeignKey to connect each device to a specific user
+
+    def __repr__(self):
+        return f'<Device {self.name}>'
+
 
 @event.listens_for(User.password, 'set', retval=True)
 def hash_user_password(target, value, oldvalue, initiator):
