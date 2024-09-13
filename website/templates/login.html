@@ -1,6 +1,12 @@
 {% extends "base.html" %} {% block title %}Login{% endblock %} {% block content
 %}
+
+<script>
+    var csrfToken = "{{ csrf_token }}";
+</script>
+
 <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <h3 align="center">Login</h3>
   <div class="form-group">
     <label for="email">Email Address</label>

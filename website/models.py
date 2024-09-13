@@ -37,6 +37,6 @@ class Device(db.Model):
 @event.listens_for(User.password, 'set', retval=True)
 def hash_user_password(target, value, oldvalue, initiator):
     if value != oldvalue:
-        return generate_password_hash(value)
+        return generate_password_hash(value, method='pbkdf2:sha256')
     return value
 

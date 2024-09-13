@@ -6,6 +6,8 @@ from flask_login import login_user, login_required, logout_user, current_user
 import json
 from flask import jsonify
 
+from flask_wtf.csrf import generate_csrf # used to generate csrf token as seen in return statement for below function
+
 auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -25,7 +27,7 @@ def login():
         else:
             flash('Email does not exist.', category='error')
 
-    return render_template("login.html", user=current_user)
+    return render_template("login.html", user=current_user, csrf=generate_csrf())
 
 
 @auth.route('/logout')
@@ -56,7 +58,7 @@ def sign_up():
             flash('Password must be at least 7 characters.', category='error')
         else:
             new_user = User(email=email, first_name=first_name, password=generate_password_hash(
-                password1, method='sha256'))
+                password1, method='pbkdf2:sha256'))
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user, remember=True)
@@ -65,7 +67,7 @@ def sign_up():
 
     return render_template("sign_up.html", user=current_user) # user=current_user was here in the template repo, but I actually don't think it needs to be there
 
-from flask_wtf.csrf import generate_csrf # used to generate csrf token as seen in return statement for below function
+# from flask_wtf.csrf import generate_csrf # used to generate csrf token as seen in return statement for below function
 @auth.route('/devices', methods=['GET', 'POST'])
 @login_required
 def register_device():
