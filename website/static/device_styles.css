@@ -1,3 +1,7 @@
+h1, h2 {
+    text-align: center;
+}
+
 /* Styles for the Table displaying devices */
 #outputTable {
     width: 100%;
@@ -77,4 +81,45 @@ button:hover {
 
 #formContainer button:hover {
     background-color: #45a049;
+}
+
+
+/* Styling for device table container */
+.table-container {
+    width: fit-content; /* Adjusts to the table's width */
+    margin: 0 auto;     /* Centers the container horizontally */
+}
+
+#deviceTable {
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#deviceTable th, #deviceTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#deviceTable th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+#deviceTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#deviceTable tr:hover {
+    background-color: #ddd;
+}
+
+#deviceTable td {
+    text-align: center;
+}
+
+/* Style the action buttons in the table */
+#deviceTable button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
 }

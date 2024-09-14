@@ -3,11 +3,12 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='device_styles.css') }}">
 
+<h1 style="color: green;">
+    Landmetrics Pro
+</h1>
+<h2>Device Management</h2>
+
 <body>
-    <h1 style="color: green;">
-        Landmetrics Pro
-    </h1>
-    <h2>Device Management</h2>
 
     <div id="formContainer">
         <label for="nameInput">Device Nickname:</label>
@@ -23,6 +24,7 @@
         <button onclick="addDevice()">Add</button>
     </div>
 
+<div class='table-container'>
     <table id="deviceTable">
         <thead>
             <tr>
@@ -36,6 +38,7 @@
             <!-- Device rows will be populated here -->
         </tbody>
     </table>
+</div>
 
     <script>
         var csrfToken = "{{ csrf_token }}";
@@ -59,8 +62,9 @@
                     row.insertCell(1).innerHTML = device.type;
                     row.insertCell(2).innerHTML = device.serial_number;
                     row.insertCell(3).innerHTML =
-                        `<button onclick="editDevice(${device.id}, this)">Edit</button>` +
-                        `<button onclick="deleteDevice(${device.id}, this)">Delete</button>`;
+            // Below here includes the styling for the buttons weirdly placed within js
+                        `<button class="btn btn-primary btn-sm" onclick="editDevice(${device.id}, this)">Edit</button>` +
+                        ` <button class="btn btn-danger btn-sm" onclick="deleteDevice(${device.id}, this)">Delete</button>`;
                 });
             });
         }
