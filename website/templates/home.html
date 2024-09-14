@@ -12,7 +12,7 @@
             <!-- Slide 1 -->
             <div class="carousel-item active">
                 <div class="d-flex justify-content-center align-items-center vh-100"
-                     style="background-image: url('{{ url_for('static', filename='images/yogendra-singh-KtPJkTlke8Y-unsplash.jpg') }}'); background-size: cover; background-position: center;">
+                     style="background-image: url('{{ url_for('static', filename='images/hero_image_1.jpg') }}'); background-size: cover; background-position: center;">
                     <div class="text-center text-white">
                         <h1>Landmetrics Pro</h1>
                         <p>Introducing innovation to physical rehab</p>
@@ -217,6 +217,8 @@
             <div id="contact-text" class="col-md-6">
                 <h2>Contact Us</h2>
                 <form action="/submit-contact-form" method="post" class="mt-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="form-group">
                         <input type="text" name="name" class="form-control" placeholder="Your Name" required>
                     </div>
@@ -232,12 +234,11 @@
         </div>
     </div>
     <!-- Footer for Trademark -->
-<footer class="footer bg-dark text-white mt-5">
-    <div class="container text-right py-3">
-        © 2024 Landmetrics Pro. All rights reserved.
-    </div>
-</footer>
-
+    <footer class="footer bg-dark text-white mt-5">
+        <div class="container text-right py-3">
+            © 2024 Landmetrics Pro. All rights reserved.
+        </div>
+    </footer>
 </section>
 
 {% endblock %}

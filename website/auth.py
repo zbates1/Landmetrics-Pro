@@ -65,7 +65,7 @@ def sign_up():
             flash('Account created!', category='success')
             return redirect(url_for('views.home'))
 
-    return render_template("sign_up.html", user=current_user) # user=current_user was here in the template repo, but I actually don't think it needs to be there
+    return render_template("sign_up.html", user=current_user, csrf=generate_csrf()) # user=current_user was here in the template repo, but I actually don't think it needs to be there
 
 # from flask_wtf.csrf import generate_csrf # used to generate csrf token as seen in return statement for below function
 @auth.route('/devices', methods=['GET', 'POST'])
