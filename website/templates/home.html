@@ -200,45 +200,38 @@
 </section>
 
 
-<!-- Contact Us -->
-<section id="contact" class="py-5 bg-secondary text-white">
-    <div class="container">
-        <div class="row">
-            <!-- Location Information -->
-            <div id="location-text" class="col-md-6">
-                <h2>Our Location</h2>
-                <p>123 Business Rd.,<br> Business City, BC 54321</p>
-                <p>Phone: (123) 456-7890</p>
-                <p>Email: info@example.com</p>
-                <!-- Embed Google Maps or other content if needed -->
-            </div>
+    <div id="content">
+        <!-- Other content sections -->
 
-            <!-- Contact Form -->
-            <div id="contact-text" class="col-md-6">
-                <h2>Contact Us</h2>
-                <form action="/submit-contact-form" method="post" class="mt-4">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <!-- Contact Us -->
+        <section id="contact" class="py-5 bg-secondary text-white"
+        style="background: url('{{ url_for('static', filename='images/contact_us_background.jpg') }}') no-repeat center center; background-size: cover; color: #ffffff;">
 
-                    <div class="form-group">
-                        <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+            <div class="container">
+                <div class="row align-items-center">
+                    <!-- Location Information -->
+                    <div id="location-text" class="col-md-6 mb-4 mb-md-0">
+                        <h2 class="text-uppercase">Contact Us</h2>
+                        <p>Office Location TBD, <br> Toledo, Ohio 43606</p>
+                        <p><strong>Phone:</strong> <a href="tel:419-602-3438" class="text-white">(419) 602-3438</a></p>
+                        <p><strong>Email:</strong> <a href="mailto:landmetrics.pro@gmail.com" class="text-white">landmetrics.pro@gmail.com</a></p>
                     </div>
-                    <div class="form-group">
-                        <input type="email" name="email" class="form-control" placeholder="Your Email" required>
+
+                    <!-- Google Maps Image -->
+                    <div id="map-image" class="col-md-6">
+                        <h2 class="text-uppercase">Find Us Here</h2>
+                        <img src="{{ url_for('static', filename='images/ut_image_gmaps.png') }}" alt="Map showing our business location" class="img-fluid rounded shadow">
                     </div>
-                    <div class="form-group">
-                        <textarea name="message" class="form-control" placeholder="Your Message" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Send</button>
-                </form>
+                </div>
             </div>
-        </div>
+        </section>
     </div>
+
     <!-- Footer for Trademark -->
-    <footer class="footer bg-dark text-white mt-5">
-        <div class="container text-right py-3">
+    <footer class="footer bg-dark text-white">
+        <div class="container text-center py-3">
             © 2024 Landmetrics Pro. All rights reserved.
         </div>
     </footer>
-</section>
 
 {% endblock %}

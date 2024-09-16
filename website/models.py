@@ -1,7 +1,6 @@
 from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-
 from sqlalchemy import event
 from werkzeug.security import generate_password_hash
 
@@ -29,9 +28,21 @@ class Device(db.Model):
     type = db.Column(db.String(150))
     serial_number = db.Column(db.String(150), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # ForeignKey to connect each device to a specific user
+    data_points = db.relationship('DeviceData', backref='device', lazy=True)
 
     def __repr__(self):
         return f'<Device {self.name}>'
+
+class DeviceData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
+    value1 = db.Column(db.Float)
+    value2 = db.Column(db.Float)
+    # Add more fields as necessary to represent the data collected from devices
+
+    def __repr__(self):
+        return f'<DeviceData {self.id} for Device {self.device_id}>'
 
 
 @event.listens_for(User.password, 'set', retval=True)

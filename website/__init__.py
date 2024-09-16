@@ -8,8 +8,6 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from werkzeug.security import generate_password_hash
 
-from flask_mail import Mail
-
 from .config import Config # this is to setup the config.py for env variables
 
 db = SQLAlchemy()
@@ -36,7 +34,7 @@ def create_app():
     app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(data_view, url_prefix='/') # Zane Addition
 
-    from .models import User, Note, Device
+    from .models import User, Note, Device, DeviceData
     
     with app.app_context():
         db.create_all()
@@ -49,26 +47,7 @@ def create_app():
     admin = Admin(app)
     admin.add_view(ModelView(User, db.session))
     admin.add_view(ModelView(Device, db.session))
-
-    # Configuration for Flask-Mail
-    # app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # For Gmail
-    # app.config['MAIL_PORT'] = 587  # For TLS
-    # app.config['MAIL_USE_TLS'] = True
-    # app.config['MAIL_USE_SSL'] = False  # Use either TLS or SSL
-    # app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # Your email address
-    # app.config['MAIL_PASSWORD'] = 'your_email_password'  # Your email password
-    # app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
-
-    # Configuration for Flask-Mail
-    app.config['MAIL_SERVER'] = app.config['MAIL_SERVER']
-    app.config['MAIL_PORT'] = app.config['MAIL_PORT']
-    app.config['MAIL_USE_TLS'] = app.config['MAIL_USE_TLS']
-    app.config['MAIL_USE_SSL'] = app.config['MAIL_USE_SSL']
-    app.config['MAIL_USERNAME'] = app.config['MAIL_USERNAME']
-    app.config['MAIL_PASSWORD'] = app.config['MAIL_PASSWORD']
-    app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_DEFAULT_SENDER']
-
-    mail = Mail(app)
+    admin.add_view(ModelView(DeviceData, db.session))
 
 
     @login_manager.user_loader

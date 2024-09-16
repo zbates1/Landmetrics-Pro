@@ -5,6 +5,14 @@
 {% block content %}
 <h1>Landmetrics Pro Data Visualization</h1>
 
+<!-- Device Selection Dropdown -->
+<select id="deviceSelect" class="custom-select" onchange="onDeviceChange()">
+  <option value="">Select a Device</option>
+  {% for device in devices %}
+    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>{{ device.name }}</option>
+  {% endfor %}
+</select>
+
 <!-- Dropdown to select the type of graph -->
 <select id="graphType" class="custom-select" onchange="updateGraph()">
   <option value="line">Line Chart</option>
@@ -17,23 +25,33 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    updateGraph('line'); // Ensures the graph initializes as a line chart on page load
+    {% if selected_device_id %}
+      updateGraph('line'); // Initializes the graph if a device is selected
+    {% endif %}
   });
 
-function updateGraph(selectedType) {
+  function onDeviceChange() {
+    const deviceId = document.getElementById('deviceSelect').value;
+    if (deviceId) {
+      // Redirect to the same page with the selected device ID as a query parameter
+      window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
+    }
+  }
+
+  function updateGraph(selectedType) {
     const ctx = document.getElementById('userDataChart').getContext('2d');
     const graphType = selectedType || document.getElementById('graphType').value;
     const chartData = {
-      labels: [1, 2, 3, 4, 5],
+    labels: {{ labels | tojson }},
       datasets: [{
-        label: 'Sample Data 1',
+        label: 'Dataset 1',
         data: {{ sample_array_1 | tojson }},
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
         tension: 0.1,
         fill: graphType === 'line' ? false : true
       }, {
-        label: 'Sample Data 2',
+        label: 'Dataset 2',
         data: {{ sample_array_2 | tojson }},
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
@@ -58,8 +76,7 @@ function updateGraph(selectedType) {
         }
       }
     });
-}
-
+  }
 </script>
 
 <button id="downloadGraph" class="btn btn-primary">Download Graph</button>
