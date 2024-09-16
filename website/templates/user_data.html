@@ -3,23 +3,59 @@
 {% block title %}Landmetrics Pro Data Visualization{% endblock %}
 
 {% block content %}
-<h1>Landmetrics Pro Data Visualization</h1>
+<div class="container my-5">
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(to bottom, #f0f0f0, #a3ceac);
+        }
+    </style>
 
-<!-- Device Selection Dropdown -->
-<select id="deviceSelect" class="custom-select" onchange="onDeviceChange()">
-  <option value="">Select a Device</option>
-  {% for device in devices %}
-    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>{{ device.name }}</option>
-  {% endfor %}
-</select>
+    <h1 class="text-center mb-5">Landmetrics Pro - Data Visualization</h1>
 
-<!-- Dropdown to select the type of graph -->
-<select id="graphType" class="custom-select" onchange="updateGraph()">
-  <option value="line">Line Chart</option>
-  <option value="bar">Bar Chart</option>
-</select>
+    <!-- Device Selection Section -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <label for="deviceSelect" class="form-label">Select a Device</label>
+            <select id="deviceSelect" class="form-select form-select-lg mb-3" onchange="onDeviceChange()">
+                <option value="" disabled selected>Select a Device</option>
+                {% for device in devices %}
+                    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>{{ device.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
 
-<canvas id="userDataChart"></canvas>
+    <!-- Graph Type Selection -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <label for="graphType" class="form-label">Select Graph Type</label>
+            <select id="graphType" class="form-select form-select-lg mb-3" onchange="updateGraph()">
+                <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="row mb-5">
+        <div class="col-md-10 mx-auto">
+            <div class="chart-container" style="position: relative; height: 60vh; width: 100%;">
+                <canvas id="userDataChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Buttons -->
+    <div class="row text-center mb-5">
+        <div class="col-md-6">
+            <button id="downloadGraph" class="btn btn-primary btn-lg">Download Graph</button>
+        </div>
+        <div class="col-md-6">
+            <button id="downloadData" class="btn btn-secondary btn-lg">Download Data</button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -42,7 +78,7 @@
     const ctx = document.getElementById('userDataChart').getContext('2d');
     const graphType = selectedType || document.getElementById('graphType').value;
     const chartData = {
-    labels: {{ labels | tojson }},
+      labels: {{ labels | tojson }},
       datasets: [{
         label: 'Dataset 1',
         data: {{ sample_array_1 | tojson }},
@@ -79,7 +115,6 @@
   }
 </script>
 
-<button id="downloadGraph" class="btn btn-primary">Download Graph</button>
 <script>
   document.getElementById('downloadGraph').addEventListener('click', function() {
     const url = window.userDataChart.toBase64Image();
@@ -90,7 +125,6 @@
   });
 </script>
 
-<button id="downloadData" class="btn btn-secondary">Download Data</button>
 <script>
   document.getElementById('downloadData').addEventListener('click', function() {
     const data = {

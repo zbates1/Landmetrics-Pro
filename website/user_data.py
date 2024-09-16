@@ -26,7 +26,7 @@ def connect_to_database():
         cur = conn.cursor()
 
         # Execute a query
-        cur.execute("SELECT * FROM your_table_name")
+        cur.execute("SELECT * FROM DeviceData")
 
         # Retrieve query results
         records = cur.fetchall()
@@ -36,6 +36,9 @@ def connect_to_database():
         # Clean up
         cur.close()
         conn.close()
+
+        if records:
+            return records
 
     except Exception as e:
         print("An error occurred:", e)
@@ -70,12 +73,12 @@ def user_data():
     # If a device is selected, retrieve its data
     if selected_device_id:
         # Fetch data for the selected device
-        # Replace this with your actual data fetching logic
         sample_array_1, sample_array_2, labels = get_device_data(selected_device_id)
     else:
-        # Default data or message
+        # Default data or empty data when no device is selected
         sample_array_1 = []
         sample_array_2 = []
+        labels = []  # Initialize labels to an empty list when no device is selected
 
     return render_template(
         "user_data.html",
@@ -86,13 +89,4 @@ def user_data():
         labels=labels,
         user=current_user,
         first_name=current_user.first_name,
-)
-
-
-def get_device_data(device_id):
-    # Implement logic to fetch data for the device
-    # For demonstration purposes, we'll return dummy data
-    # In practice, fetch data from your database or data source
-    sample_array_1 = [1, 2, 3, 4, 5]
-    sample_array_2 = [6, 7, 8, 9, 10]
-    return sample_array_1, sample_array_2
+    )
