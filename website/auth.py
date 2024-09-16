@@ -93,7 +93,7 @@ def register_device():
 
     # This part is unnecessary for POST request, should be handled differently
     devices = Device.query.filter_by(user_id=current_user.id).all()
-    return render_template("devices.html", user=current_user, devices=devices, csrf_token=generate_csrf())
+    return render_template("devices.html", user=current_user, first_name=current_user.first_name, devices=devices, csrf_token=generate_csrf())
 
 @auth.route('/get-devices')
 @login_required
