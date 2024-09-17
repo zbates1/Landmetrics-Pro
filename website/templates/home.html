@@ -4,7 +4,7 @@
 {% block content %}
 <!-- Hero Section with Bootstrap for carosel-->
 
-<link rel="stylesheet" href="{{ url_for('static', filename='about_us_values.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 
 <section id="hero" class="vh-100">
     <div id="heroCarousel" class="carousel slide" data-ride="carousel">
@@ -22,7 +22,7 @@
             <!-- Slide 2 -->
             <div class="carousel-item">
                 <div class="d-flex justify-content-center align-items-center vh-100"
-                     style="background-image: url('{{ url_for('static', filename='images/stock_image_2.jpg') }}'); background-size: cover; background-position: center;">
+                     style="background-image: url('{{ url_for('static', filename='images/hero_image_2.jpg') }}'); background-size: cover; background-position: center;">
                     <div class="text-center text-white">
                         <h1>Explore how Landmetrics Pro can revolutionize your physical rehab</h1>
                         <p>Discover how collecting rehabilitation data can improve healing outcomes.</p>
@@ -70,7 +70,7 @@
 </section>
 
 <!-- Innovation/Product -->
-<section id="innovation" class="py-5 bg-light">
+<section id="innovation" class="py-5 section-background">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-6">
