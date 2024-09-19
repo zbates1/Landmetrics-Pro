@@ -8,4 +8,4 @@ class Config:
 
 
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess' # I am not sure why the app in __init__ is using this key, and I will probably need to understand this for production
-    DATABASE_URL = os.environ.get('DATABASE_URL')
+    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
