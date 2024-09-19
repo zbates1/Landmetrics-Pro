@@ -11,4 +11,4 @@ if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
 
     # Bind to all interfaces on the provided port
-    app.run(debug=debug_mode, port=port, host="0.0.0.0")
+    # app.run(debug=debug_mode, port=port, host="0.0.0.0")
