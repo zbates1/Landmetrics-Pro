@@ -17,7 +17,8 @@ DB_NAME = "database.db"
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL'] # This is needed, and doesn't get set in the previous line
+    # tag: changed from DATABASE_URL to uri for heroku
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['uri'] # This is needed, and doesn't get set in the previous line
     print("Database Path:", app.config['SQLALCHEMY_DATABASE_URI'])
 
     csrf = CSRFProtect(app)

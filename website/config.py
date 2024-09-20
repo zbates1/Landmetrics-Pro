@@ -16,6 +16,12 @@ class Config:
     # tag: heroku deployment
     # For heroku, I think I need to change it to this: tag: developments link: https://devcenter.heroku.com/articles/connecting-heroku-postgres#heroku-postgres-ssl
     DATABASE_URL = os.environ['DATABASE_URL']
-    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+    # tag: fix for sqlalchemy error in heroku deployment: changing DATABASE_URL to uri
+    uri = os.getenv("DATABASE_URL")  # or other relevant config var
+    if uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
+    # rest of connection code using the connection string `uri`
 
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    conn = psycopg2.connect(uri, sslmode='require')
+
+    SQLALCHEMY_DATABASE_URI = uri
