@@ -28,9 +28,11 @@ def create_app():
     # app.config['SQLALCHEMY_DATABASE_URI'] = app.config['uri'] # This is needed, and doesn't get set in the previous line
     
     # Version 2 Solution
-    app.config['SQLALCHEMY_DATABASE_URI'] = Config.uri
+    app.config['DATABASE_URL'] = Config.uri
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
 
-    
+
+
     print("Database Path:", app.config['SQLALCHEMY_DATABASE_URI'])
 
     csrf = CSRFProtect(app)
