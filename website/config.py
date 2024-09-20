@@ -11,11 +11,11 @@ class Config:
 
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess' # I am not sure why the app in __init__ is using this key, and I will probably need to understand this for production
     # tag: local deployment
-    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
+    # DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
    
     # tag: heroku deployment
     # For heroku, I think I need to change it to this: tag: developments link: https://devcenter.heroku.com/articles/connecting-heroku-postgres#heroku-postgres-ssl
-    # DATABASE_URL = os.environ['DATABASE_URL']
-    # conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+    DATABASE_URL = os.environ['DATABASE_URL']
+    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
