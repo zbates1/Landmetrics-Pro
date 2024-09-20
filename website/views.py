@@ -27,7 +27,7 @@ def home():
 
     # return render_template("home.html", user=current_user, first_name=current_user.first_name, csrf=generate_csrf())
 
-    return render_template("home.html", csrf=generate_csrf, user=current_user, first_name=current_user.first_name)
+    return render_template("home.html", csrf=generate_csrf, user=current_user)
 
 
 @views.route('/delete-note', methods=['POST'])
