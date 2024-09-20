@@ -18,8 +18,10 @@ class Config:
     DATABASE_URL = os.environ['DATABASE_URL']
     # tag: fix for sqlalchemy error in heroku deployment: changing DATABASE_URL to uri
     uri = os.getenv("DATABASE_URL")  # or other relevant config var
+    print(f'uri before if: {uri}')
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
+    print(f'uri after if: {uri}')
     # rest of connection code using the connection string `uri`
 
     conn = psycopg2.connect(uri, sslmode='require')

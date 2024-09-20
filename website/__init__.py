@@ -23,8 +23,14 @@ def create_app():
 
     # tag: heroku deployment
     # tag: changed from DATABASE_URL to uri for heroku
-    app.config['uri'] = app.config['DATABASE_URL'] # tag: should be deleted if you are not using heroku
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['uri'] # This is needed, and doesn't get set in the previous line
+    # Version 1 Solution
+    # app.config['uri'] = app.config['DATABASE_URL'] # tag: should be deleted if you are not using heroku
+    # app.config['SQLALCHEMY_DATABASE_URI'] = app.config['uri'] # This is needed, and doesn't get set in the previous line
+    
+    # Version 2 Solution
+    app.config['SQLALCHEMY_DATABASE_URI'] = Config.uri
+
+    
     print("Database Path:", app.config['SQLALCHEMY_DATABASE_URI'])
 
     csrf = CSRFProtect(app)
