@@ -173,10 +173,19 @@ heroku config --app your-app-name
 
 In production, use Flask Shell or SQLAlchemy with the connection string from your environment variables (usually DATABASE_URL for Heroku).
 
-### To use Flask Shell in production:
+### Set FLASK_APP in Heroku Config Vars **this method works with Landmetrics-Pro**:
 ```bash
-heroku run flask shell --app your-app-name
+heroku config:set FLASK_APP=main:app --app landmetrics-pro
 ```
+### Run the Flask Shell:
+```bash
+heroku run --app landmetrics-pro flask shell
+```
+or
+```bash
+heroku run --app landmetrics-pro flask --app main:app shell
+```
+
 This allows you to use the same utility functions in a live production environment, such as the local flask shell commands for local development shown above. 
 
 ## 🔥 Urgent To-Do List

@@ -40,7 +40,7 @@
         </div>
         <div class="navbar-text">
             {% if user.is_authenticated %}
-            Welcome, {{ first_name }}.
+            Welcome, {{ user.first_name }}.
             {% endif %}
         </div>
         <div class="navbar-nav ml-auto">

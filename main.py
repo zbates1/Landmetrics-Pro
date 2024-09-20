@@ -1,14 +1,19 @@
+# main.py
 import os
 from website import create_app
+from website.config import DevelopmentConfig, ProductionConfig
 
-app = create_app()
+env = os.getenv('FLASK_ENV', 'development')
+
+if env == 'production': # tag: set up ENV variables in Heroku GUI or in Procfile
+    config_class = ProductionConfig
+    print(f'Running Landmetrics-Pro in {env} mode')
+else:
+    config_class = DevelopmentConfig
+    print(f'Running Landmetrics-Pro in {env} mode')
+
+app = create_app(config_class)
 
 if __name__ == '__main__':
-    # Dynamically fetch the port from the environment variable or use 5000 by default
     port = int(os.getenv('PORT', 5000))
-
-    # Dynamically enable debug mode if FLASK_DEBUG is set to 1, else default to False
-    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
-
-    # Bind to all interfaces on the provided port
-    # app.run(debug=debug_mode, port=port, host="0.0.0.0") # tag: local deployment
+    app.run(port=port, host='0.0.0.0')

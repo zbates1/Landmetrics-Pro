@@ -144,7 +144,7 @@ if __name__ == '__main__':
 # 3.
 # from website.db_utils import add_device_data
 # Example command to add data for a device with device_id=1
-# add_device_data(device_id=SN123456, value1=50.5, value2=30.7) # tag: usage-serial-number-change -> this device id was changed to relate to serial number in models.py
+# add_device_data(serial_number='SN123456', value1=50.5, value2=30.7) # tag: usage-serial-number-change -> this device id was changed to relate to serial number in models.py
 
 
 

@@ -1,34 +1,27 @@
-from flask import Blueprint, render_template, request, flash, jsonify
+from flask import Blueprint, render_template, request, flash, jsonify, current_app # Current app works much better than having to access the specific config files
 from flask_login import login_required, current_user
 from .models import Note
 from . import db
 import json
-
-# 
-from flask_wtf.csrf import generate_csrf # CSRF protection for contact form
-from flask import request, redirect, url_for, flash, render_template
-from flask_mail import Message
-
-from .config import Config # this is to setup the config.py for env variables
-DATABASE_URL = Config.DATABASE_URL
+from flask_wtf.csrf import generate_csrf
 
 views = Blueprint('views', __name__)
 
-
 @views.route('/', methods=['GET', 'POST'])
 def home():
-    if request.method == 'POST': 
-        note = request.form.get('note')#Gets the note from the HTML 
+    if request.method == 'POST':
+        note = request.form.get('note')
 
         if len(note) < 1:
-            flash('Note is too short!', category='error') 
+            flash('Note is too short!', category='error')
         else:
-            new_note = Note(data=note, user_id=current_user.id)  #providing the schema for the note 
-            db.session.add(new_note) #adding the note to the database 
+            new_note = Note(data=note, user_id=current_user.id)
+            db.session.add(new_note)
             db.session.commit()
             flash('Note added!', category='success')
 
-    # return render_template("home.html", user=current_user, first_name=current_user.first_name, csrf=generate_csrf())
+    # Access DATABASE_URL from current_app.config
+    DATABASE_URL = current_app.config.get('DATABASE_URL', '')
 
     return render_template("home.html", csrf=generate_csrf, user=current_user, DATABASE_URL=DATABASE_URL)
 
