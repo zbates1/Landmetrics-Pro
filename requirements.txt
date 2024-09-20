@@ -1,6 +1,9 @@
-Flask
-Werkzeug
+flask
 Flask-SQLAlchemy
-flask_login
-# Flask==2.0.2
+Flask-WTF
+flask-login
+flask-admin
+Flask-Mail
+python-dotenv
 gunicorn
+psycopg2

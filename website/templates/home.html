@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Bootstrap for carosel-->
+
+<link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+
+<section id="hero" class="vh-100">
+    <div id="heroCarousel" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/hero_image_1.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Landmetrics Pro</h1>
+                        <p>Introducing innovation to physical rehab</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/hero_image_2.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Explore how Landmetrics Pro can revolutionize your physical rehab</h1>
+                        <p>Discover how collecting rehabilitation data can improve healing outcomes.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="d-flex justify-content-center align-items-center vh-100"
+                     style="background-image: url('{{ url_for('static', filename='images/stock_image_3.jpg') }}'); background-size: cover; background-position: center;">
+                    <div class="text-center text-white">
+                        <h1>Join the movement</h1> <!-- I would like to have customer statistics on this page at some point -->
+                        <p>We want to improve rehabiliation by providing low-cost devices to quanitify your healing metrics and personalize treatment plans.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carousel controls -->
+        <a class="carousel-control-prev" href="#heroCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#heroCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+</section>
+
+
+<!-- About Us/Values -->
+<section id="about" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div id="about-text" class="col-md-6">
+                <h2>About Us</h2>
+                <p>Our mission is to deliver exceptional products that improve daily life. We believe in sustainability, quality, and community.</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/info_image.jpg') }}" alt="About Us" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Innovation/Product -->
+<section id="innovation" class="py-5 section-background">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/example_usage_stock_2.png') }}" alt="Innovation" class="img-fluid">
+            </div>
+            <div id="innovation-text" class="col-md-6">
+                <h2>Innovation</h2>
+                <p>Our products are at the cutting edge of technology, designed to be both effective and intuitive.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Problem, Solution -->
+<section id="problem-solution" class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div id="problem-text" class="col-md-6">
+                <h2>Problem Statement</h2>
+                <p>The issue that many face daily...</p>
+                <h2>Solution</h2>
+                <p>Our product solves this by...</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/example_usage_stock_3.png') }}" alt="Problem and Solution" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News, Resources -->
+<section id="news" class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='images/news_resources.jpg') }}" alt="News and Resources" class="img-fluid">
+            </div>
+            <div id="news-text" class="col-md-6">
+                <h2>News and Resources</h2>
+                <ul>
+                    <li><a href="#" class="text-black">Link to latest news article</a></li>
+                    <li><a href="#" class="text-black">Link to resource</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Combined Section for Testimonials and Awards -->
+<section id="combined-section" class="py-5">
+    <div class="container">
+        <div id="combinedCarousel" class="carousel slide" data-ride="carousel">
+            <!-- Carousel Indicators -->
+            <ol class="carousel-indicators">
+                <li data-target="#combinedCarousel" data-slide-to="0" class="active"></li>
+                <li data-target="#combinedCarousel" data-slide-to="1"></li>
+                <li data-target="#combinedCarousel" data-slide-to="2"></li>
+                <li data-target="#combinedCarousel" data-slide-to="3"></li>
+            </ol>
+
+            <!-- Carousel Inner -->
+            <div class="carousel-inner">
+                <!-- First Slide: Testimonial 1 -->
+                <div class="carousel-item active">
+                    <div class="row align-items-center">
+                        <div id="test-award-images" class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/testimonial_1.jpg') }}" alt="Testimonial 1" class="img-fluid">
+                        </div>
+                        <div id ="combined-text" class="col-md-4">
+                            <blockquote class="blockquote">
+                                <div class="text-background"> <!-- Wrapper with background -->
+                                <p class="mb-0">"This product has changed my life!"</p>
+                                <footer class="blockquote-footer">Jane Doe</footer>
+                                </div>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Slide: Testimonial 2 -->
+                <div class="carousel-item">
+                    <div class="row align-items-center">
+                        <div id="test-award-images" class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/testimonial_2.jpg') }}" alt="Testimonial 2" class="img-fluid">
+                        </div>
+                        <div id="combined-text" class="col-md-4">
+                            <blockquote class="blockquote">
+                                <div class="text-background"> <!-- Wrapper with background -->
+                                <p class="mb-0">"Absolutely fantastic results!"</p>
+                                <footer class="blockquote-footer">John Smith</footer>
+                                </div>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Third Slide: Award 1 -->
+                <div class="carousel-item">
+                    <div class="row align-items-center">
+                        <div id="test-award-images" class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/award_1.jpg') }}" alt="Award 1" class="img-fluid">
+                        </div>
+                        <div id="combined-text" class="col-md-4">
+                            <div class="text-background"> <!-- Wrapper with background -->
+                            <h3>Best Innovation Award 2024</h3>
+                            <p>We are honored to receive the Best Innovation Award for our groundbreaking product.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fourth Slide: Award 2 -->
+                <div class="carousel-item">
+                    <div class="row align-items-center">
+                        <div id="test-award-images" class="col-md-6">
+                            <img src="{{ url_for('static', filename='images/award_2.jpg') }}" alt="Award 2" class="img-fluid">
+                        </div>
+                        <div id="combined-text" class="col-md-4">
+                            <h3>Top Industry Recognition</h3>
+                            <p>Our commitment to excellence has earned us top recognition in the industry.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<div id="content">
+    <!-- Other content sections -->
+
+    <section id="contact" class="py-5 bg-secondary text-white">
+        <style>
+            #contact {
+                position: relative;
+                background: url('{{ url_for('static', filename='images/contact_us_background.jpg') }}') no-repeat center center;
+                background-size: cover;
+                color: #ffffff;
+            }
+
+            #contact::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 1;
+            }
+
+            #contact .container {
+                position: relative;
+                z-index: 2;
+            }
+        </style>
+
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Location Information -->
+                <div id="location-text" class="col-md-4">
+                    <h2 class="text-uppercase">Contact Us</h2>
+                    <p>Office Location TBD,<br> Toledo, Ohio 43606</p>
+                    <p><strong>Phone:</strong> <a href="tel:419-602-3438" class="text-white">419-602-3438</a></p>
+                    <p><strong>Email:</strong> <a href="mailto:landmetrics.pro@gmail.com" class="text-white">landmetrics.pro@gmail.com</a></p>
+                </div>
+
+                <!-- Google Maps Image -->
+                <div id="map-image" class="col-md-4">
+                    <h2 class="text-uppercase">Find Us Here</h2>
+                    <img src="{{ url_for('static', filename='images/ut_image_gmaps.png') }}" alt="Map showing our business location" class="img-fluid rounded shadow">
+                </div>
+
+                <!-- Shopify and Stripe Section -->
+                <div id="shop-stripe" class="col-md-4">
+                    <h2 class="text-uppercase">Shop & Subscribe</h2>
+                    <p>Buy Landmetrics-Pro devices from our Shopify store:</p>
+                    <p><a href="your_shopify_store_link" class="btn btn-primary">Buy Devices</a></p>
+                    <p>Subscribe to our Data Analysis Software:</p>
+                    <!-- Stripe Checkout Form -->
+                    <form action="/create-checkout-session" method="POST">
+                        <button class="btn btn-success">Subscribe Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+    <!-- Footer for Trademark -->
+    <footer class="footer bg-dark text-white">
+        <div class="container text-center py-3">
+            © 2024 Landmetrics Pro. All rights reserved.
+        </div>
+    </footer>
+
+{% endblock %}

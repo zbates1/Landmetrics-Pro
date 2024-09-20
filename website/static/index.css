@@ -1,0 +1,16 @@
+.footer {
+    position: fixed;    
+    bottom: 0;
+    width: 100%;
+    height: 2.5%;
+    text-size-adjust: 100%;
+    line-height: 5%;
+}
+
+#combinedCarousel .carousel-indicators li {
+    background-color: #bb1d1d; /* Change #yourDesiredColor to your preferred color */
+}
+
+#combinedCarousel .carousel-indicators .active {
+    background-color: #3f0fde; /* A different color for the active indicator */
+}

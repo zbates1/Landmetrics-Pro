@@ -1,0 +1,40 @@
+# This is the version of the Docker Compose file.
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code  # Bind mount the code for live updates in development
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py
+    command: python main.py  # Default to the Flask development server
+    depends_on:
+      - db
+
+  app-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+    command: gunicorn -c gunicorn_config.py app:app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12  # Example database service
+    environment:
+      POSTGRES_DB: exampledb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

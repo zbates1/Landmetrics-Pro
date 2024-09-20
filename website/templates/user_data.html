@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Landmetrics Pro Data Visualization{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(to bottom, #f0f0f0, #a3ceac);
+        }
+    </style>
+
+    <h1 class="text-center mb-5">Landmetrics Pro - Data Visualization</h1>
+
+    <!-- Device Selection Section -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <label for="deviceSelect" class="form-label">Select a Device</label>
+            <select id="deviceSelect" class="form-select form-select-lg mb-3" onchange="onDeviceChange()">
+                <option value="" disabled selected>Select a Device</option>
+                {% for device in devices %}
+                    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>{{ device.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Graph Type Selection -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <label for="graphType" class="form-label">Select Graph Type</label>
+            <select id="graphType" class="form-select form-select-lg mb-3" onchange="updateGraph()">
+                <option value="line">Line Chart</option>
+                <option value="bar">Bar Chart</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chart Area -->
+    <div class="row mb-5">
+        <div class="col-md-10 mx-auto">
+            <div class="chart-container" style="position: relative; height: 60vh; width: 100%;">
+                <canvas id="userDataChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Buttons -->
+    <div class="row text-center mb-5">
+        <div class="col-md-6">
+            <button id="downloadGraph" class="btn btn-primary btn-lg">Download Graph</button>
+        </div>
+        <div class="col-md-6">
+            <button id="downloadData" class="btn btn-secondary btn-lg">Download Data</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% if selected_device_id %}
+      updateGraph('line'); // Initializes the graph if a device is selected
+    {% endif %}
+  });
+
+  function onDeviceChange() {
+    const deviceId = document.getElementById('deviceSelect').value;
+    if (deviceId) {
+      // Redirect to the same page with the selected device ID as a query parameter
+      window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
+    }
+  }
+
+  function updateGraph(selectedType) {
+    const ctx = document.getElementById('userDataChart').getContext('2d');
+    const graphType = selectedType || document.getElementById('graphType').value;
+    const chartData = {
+      labels: {{ labels | tojson }},
+      datasets: [{
+        label: 'Dataset 1',
+        data: {{ sample_array_1 | tojson }},
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        tension: 0.1,
+        fill: graphType === 'line' ? false : true
+      }, {
+        label: 'Dataset 2',
+        data: {{ sample_array_2 | tojson }},
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        tension: 0.1,
+        fill: graphType === 'line' ? false : true
+      }]
+    };
+
+    // Clear existing canvas to redraw
+    if (window.userDataChart && typeof window.userDataChart.destroy === 'function') {
+        window.userDataChart.destroy();
+    }
+
+    window.userDataChart = new Chart(ctx, {
+      type: graphType,
+      data: chartData,
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+</script>
+
+<script>
+  document.getElementById('downloadGraph').addEventListener('click', function() {
+    const url = window.userDataChart.toBase64Image();
+    const link = document.createElement('a');
+    link.download = 'userDataChart.png';
+    link.href = url;
+    link.click();
+  });
+</script>
+
+<script>
+  document.getElementById('downloadData').addEventListener('click', function() {
+    const data = {
+      SampleData1: {{ sample_array_1 | tojson }},
+      SampleData2: {{ sample_array_2 | tojson }}
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+    const link = document.createElement('a');
+    link.download = 'userData.json';
+    link.href = dataStr;
+    link.click();
+  });
+</script>
+
+{% endblock %}

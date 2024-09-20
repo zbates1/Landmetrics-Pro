@@ -1,0 +1,178 @@
+h1 {
+    text-align: center;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh; /* Ensures the body is at least the height of the viewport */
+    background: linear-gradient(to bottom, #f0f0f0, #a3ceac);
+}
+
+
+/* Styles for the Table displaying devices */
+#outputTable {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    background-color: transparent;
+}
+
+#outputTable th, #outputTable td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+#outputTable thead th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+#outputTable tbody + tbody {
+    border-top: 2px solid #dee2e6;
+}
+
+/* Buttons for actions within the table */
+button {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+.button-save {
+    background-color: #007bff; /* Blue */
+}
+
+.button-delete {
+    background-color: #dc3545; /* Red */
+}
+
+/* Form styling for device registration */
+#formContainer {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;  /* Increased left padding */
+    padding-right: 40px; /* Increased right padding */
+    background: linear-gradient(to bottom, #ffffff, #d9d9d9);
+    border-radius: 8px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Form labels and inputs */
+#formContainer label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#formContainer input,
+#formContainer textarea {
+    width: 300px;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Styling for Add Device Button */
+#formContainer button {
+    margin: 10px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px; /* Increased padding for better appearance */
+    font-size: 16px; /* Increased font size */
+    cursor: pointer;
+}
+
+#formContainer button:hover {
+    background-color: #45a049;
+}
+
+/* Styling for device table container */
+.table-container {
+    width: fit-content; /* Adjusts to the table's width */
+    margin: 0 auto;     /* Centers the container horizontally */
+}
+
+#deviceTable {
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#deviceTable th, #deviceTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#deviceTable th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+#deviceTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#deviceTable tr:hover {
+    background-color: #ddd;
+}
+
+#deviceTable td {
+    text-align: center;
+}
+
+/* Style the action buttons in the table */
+#deviceTable button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    color: white;
+}
+
+#deviceTable .edit-button {
+    background-color: #007bff; /* Blue */
+}
+
+#deviceTable .edit-button:hover {
+    background-color: #0069d9;
+}
+
+#deviceTable .delete-button {
+    background-color: #dc3545; /* Red */
+}
+
+#deviceTable .delete-button:hover {
+    background-color: #c82333;
+}
+
+/* Style for the form message */
+.form-message {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 20px;
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 10px 20px;
+    border-left: 5px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
