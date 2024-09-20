@@ -102,12 +102,87 @@ Access the application here: [**Localhost Link**](http://127.0.0.1:5000)
 
 ---
 
+# Database Access Guide
+
+In both **local development** and **production**, you may need to access and interact with the databases through the CLI. Below are instructions for local interaction with an SQLite database in development, as well as production-ready SSH commands to access the Heroku Postgres database.
+
+---
+
+## Local Development with Flask Shell
+
+To interact with the SQLite database during local development, use the Flask shell.
+
+### **How to Access Flask Shell**
+```bash
+# Run the following command in the root of your project:
+flask --app website shell
+```
+
+This command opens the Flask shell, allowing you to manually add or interact with the database using utility functions.
+
+## Local Development/Database Access with Flask Shell and Example Commands 
+Check website/db_utils.py for a comprehensive list of the functions and commands.
+
+### Add a new user
+```bash
+from website.db_utils import add_user
+add_user(email="test@example.com", password="password123", first_name="Test")
+```
+### Add a new device for a user Example: Add a device for a user with user_id=1 (use list_users() to find the user_id):
+```bash
+from website.db_utils import add_device
+add_device(name="Knee Tracker", device_type="Physical Therapy Device", serial_number="SN123456", user_id=1)
+```
+### Add new data for a device Example: Add data for a device using its serial number (SN123456):
+```bash
+from website.db_utils import add_device_data
+add_device_data(serial_number="SN123456", value1=50.5, value2=30.7)
+```
+
+## Local Development Example CLI Commands 
+For easier interaction without entering the Flask shell, you can use CLI commands. Here are a few examples:
+
+### List all users:
+```bash
+python db_utils.py --list-users
+```
+### List devices for a user with user_id=1:
+```bash
+python db_utils.py --list-devices-for-user 1
+```
+
+
+## Production Database Access (Heroku Postgres)
+
+For production environments, you’ll need to connect to the Heroku Postgres database. Follow these steps:
+
+### **Connect to the Postgres Database via Heroku**
+```bash
+heroku login
+```
+### Access the Postgres CLI:
+```bash
+heroku pg:psql --app your-app-name
+```
+### Check Database Details:
+```bash
+heroku config --app your-app-name
+```
+
+## Accessing Database Utilities in Production with Flask Shell
+
+In production, use Flask Shell or SQLAlchemy with the connection string from your environment variables (usually DATABASE_URL for Heroku).
+
+### To use Flask Shell in production:
+```bash
+heroku run flask shell --app your-app-name
+```
+This allows you to use the same utility functions in a live production environment, such as the local flask shell commands for local development shown above. 
+
 ## 🔥 Urgent To-Do List
 
 - [ ] 🤖 **Prototype Integration**: Arduino/Raspberry Pi → SQL → Web display.
 - [ ] 📊 **Finalize Data Analysis View**: Enhance the interface for better user experience.
-- [ ] 💾 **Data Export Method**: Implement a secure and efficient data export functionality.
-- [ ] 🐳 **Dockerize Repository**: Setup Docker for consistent development environments (see branches: `tutorial_test` and `main`).
 - [ ] 🔒 **Environment Variables**: Establish secure deployment practices. (see 'user_data.py' line 14 to see how best practices for getting env varaibles in your py scripts)
 
 ---
