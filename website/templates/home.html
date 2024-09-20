@@ -265,7 +265,10 @@
     <footer class="footer bg-dark text-white">
         <div class="container text-center py-3">
             © 2024 Landmetrics Pro. All rights reserved.
-            
+            {% if DATABASE_URL %}
+            Database URL, {{ DATABASE_URL }}.
+            {% endif %}
+
         </div>
     </footer>
 

@@ -9,6 +9,9 @@ from flask_wtf.csrf import generate_csrf # CSRF protection for contact form
 from flask import request, redirect, url_for, flash, render_template
 from flask_mail import Message
 
+from .config import Config # this is to setup the config.py for env variables
+DATABASE_URL = Config.DATABASE_URL
+
 views = Blueprint('views', __name__)
 
 
@@ -27,7 +30,7 @@ def home():
 
     # return render_template("home.html", user=current_user, first_name=current_user.first_name, csrf=generate_csrf())
 
-    return render_template("home.html", csrf=generate_csrf, user=current_user)
+    return render_template("home.html", csrf=generate_csrf, user=current_user, DATABASE_URL=DATABASE_URL)
 
 
 @views.route('/delete-note', methods=['POST'])
