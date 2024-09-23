@@ -1,11 +1,12 @@
 import logging
 from flask import Blueprint, render_template, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from .models import Note, Device, DeviceData
+from .models import Device, DeviceData
 from . import db
 import json
 from flask_wtf.csrf import generate_csrf
-from flask_wtf.csrf import CSRFProtect, csrf_exempt
+# from flask_wtf.csrf import CSRFProtect, csrf_exempt
+from flask_wtf.csrf import CSRFProtect
 from datetime import datetime
 
 views = Blueprint('views', __name__)
@@ -47,7 +48,7 @@ def home():
 
 # Taking data from the Arduino ESP32
 @views.route('/api/data', methods=['POST'])
-@csrf_exempt
+@csrf.exempt
 def receive_data():
     data = request.get_json()
     if not data:
