@@ -1,11 +1,31 @@
-from flask import Blueprint, render_template, request, flash, jsonify, current_app # Current app works much better than having to access the specific config files
+import logging
+from flask import Blueprint, render_template, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from .models import Note
+from .models import Note, Device, DeviceData
 from . import db
 import json
 from flask_wtf.csrf import generate_csrf
+from flask_wtf.csrf import CSRFProtect, csrf_exempt
+from datetime import datetime
 
 views = Blueprint('views', __name__)
+csrf = CSRFProtect()
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a console handler
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+# Create a formatter and set it for the handler
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(handler)
+
 
 @views.route('/', methods=['GET', 'POST'])
 def home():
@@ -25,15 +45,64 @@ def home():
 
     return render_template("home.html", csrf=generate_csrf, user=current_user, DATABASE_URL=DATABASE_URL)
 
+# Taking data from the Arduino ESP32
+@views.route('/api/data', methods=['POST'])
+@csrf_exempt
+def receive_data():
+    data = request.get_json()
+    if not data:
+        logger.error("No JSON data received")
+        return jsonify({"status": "error", "message": "No JSON data received"}), 400
 
-@views.route('/delete-note', methods=['POST'])
-def delete_note():  
-    note = json.loads(request.data) # this function expects a JSON from the INDEX.js file 
-    noteId = note['noteId']
-    note = Note.query.get(noteId)
-    if note:
-        if note.user_id == current_user.id:
-            db.session.delete(note)
-            db.session.commit()
+    # Extract data from the request
+    device_serial_number = data.get('deviceId')  # Renamed variable
+    ax = data.get('ax')
+    ay = data.get('ay')
+    az = data.get('az')
+    gx = data.get('gx')
+    gy = data.get('gy')
+    gz = data.get('gz')
 
-    return jsonify({})
+    logger.info(f"Received data from device_serial_number: {device_serial_number}")
+
+    # Validate that all required fields are present
+    if not all([
+        device_serial_number,
+        ax is not None,
+        ay is not None,
+        az is not None,
+        gx is not None,
+        gy is not None,
+        gz is not None
+    ]):
+        logger.error("Missing data fields in the received JSON")
+        return jsonify({"status": "error", "message": "Missing data fields"}), 400
+
+    # Find the device in the database
+    device = Device.query.filter_by(serial_number=device_serial_number).first()
+    if not device:
+        logger.error(f"Device with serial_number {device_serial_number} not found in the database")
+        return jsonify({"status": "error", "message": "Device not found"}), 404
+
+    # Create a new DeviceData entry
+    new_data = DeviceData(
+        device_id=device.id,  # Use the primary key here
+        timestamp=datetime.utcnow(),
+        ax=ax,
+        ay=ay,
+        az=az,
+        gx=gx,
+        gy=gy,
+        gz=gz
+    )
+
+    try:
+        db.session.add(new_data)
+        db.session.commit()
+        logger.info(f"Data saved for Device with serial_number {device_serial_number}")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Database error when saving data for Device with serial_number {device_serial_number}: {str(e)}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+    return jsonify({"status": "success", "message": "Data received and saved"}), 200    
