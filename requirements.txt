@@ -3,7 +3,7 @@ Flask-SQLAlchemy
 Flask-WTF
 flask-login
 flask-admin
-Flask-Mail
+Flask-Migrate
 python-dotenv
 gunicorn
 psycopg2

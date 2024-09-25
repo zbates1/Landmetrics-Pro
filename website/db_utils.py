@@ -22,27 +22,24 @@ def add_device(name, device_type, serial_number, user_id):
     else:
         print(f'User with id {user_id} does not exist.')
 
-# # Add new device data for a specific device
-# def add_device_data(device_id, value1, value2):
-#     device = Device.query.get(device_id)
-#     if device:
-#         new_data = DeviceData(device_id=device_id, value1=value1, value2=value2)
-#         db.session.add(new_data)
-#         db.session.commit()
-#         print(f'Data for Device {device.name} added successfully!')
-#     else:
-#         print(f'Device with id {device_id} does not exist.')
-
-def add_device_data(serial_number, value1, value2):
+# Updated add_device_data function
+def add_device_data(serial_number, ax, ay, az, gx, gy, gz):
     device = Device.query.filter_by(serial_number=serial_number).first()  # Query by serial_number
     if device:
-        new_data = DeviceData(device_id=device.id, value1=value1, value2=value2)  # Use device ID here, not serial_number
+        new_data = DeviceData(
+            device_id=device.id,
+            ax=ax,
+            ay=ay,
+            az=az,
+            gx=gx,
+            gy=gy,
+            gz=gz
+        )
         db.session.add(new_data)
         db.session.commit()
         print(f'Data for Device {serial_number} added successfully!')
     else:
-        print(f'Device with SN {serial_number} does not exist.')
-
+        print(f'Device with serial number {serial_number} does not exist.')
 
 def list_users():
     users = User.query.all()
@@ -80,15 +77,18 @@ def list_all_devices():
         print("No devices found in the database.")
 
 
+# Updated list_device_data function
 def list_device_data(serial_number):
     device = Device.query.filter_by(serial_number=serial_number).first()
     if device:
         if device.data_points:
             print(f"Data points for {device.name} (Serial: {device.serial_number}):")
-            print(f"{'Data ID':<10} {'Timestamp':<25} {'Value 1':<10} {'Value 2':<10}")
-            print("="*60)
+            print(f"{'Data ID':<10} {'Timestamp':<25} {'ax':<10} {'ay':<10} {'az':<10} {'gx':<10} {'gy':<10} {'gz':<10}")
+            print("=" * 105)
             for data in device.data_points:
-                print(f"{data.id:<10} {data.timestamp.strftime('%Y-%m-%d %H:%M:%S'):<25} {data.value1:<10.2f} {data.value2:<10.2f}")
+                print(f"{data.id:<10} {data.timestamp.strftime('%Y-%m-%d %H:%M:%S'):<25} "
+                      f"{data.ax:<10.2f} {data.ay:<10.2f} {data.az:<10.2f} "
+                      f"{data.gx:<10.2f} {data.gy:<10.2f} {data.gz:<10.2f}")
         else:
             print(f"No data points found for device {device.name}.")
     else:
@@ -102,14 +102,13 @@ def find_user_by_email(email):
         print(f"No user found with email {email}.")
 
 if __name__ == '__main__':
-    # NOTE: THIS IS FOR CLI COMMANDS BELOW, DON'T THINK THAT YOU NEED TO RUN ALL QUERIES WHEN YOU CALL THE SCRIPT, SEE CLI COMMANDS BELOW
     import argparse
     parser = argparse.ArgumentParser(description="CLI Tools for Interacting with the Database")
     
     parser.add_argument('--list-users', action='store_true', help="List all users")
     parser.add_argument('--list-devices-for-user', type=int, help="List devices for a specific user by user ID")
     parser.add_argument('--list-all-devices', action='store_true', help="List all devices")
-    parser.add_argument('--list-device-data', type=int, help="List data points for a specific device by device ID")
+    parser.add_argument('--list-device-data', type=str, help="List data points for a specific device by serial number")
     parser.add_argument('--find-user-by-email', type=str, help="Find a user by their email")
     
     args = parser.parse_args()
@@ -124,6 +123,7 @@ if __name__ == '__main__':
         list_device_data(args.list_device_data)
     elif args.find_user_by_email:
         find_user_by_email(args.find_user_by_email)
+
 
 
 ## Usage
@@ -144,7 +144,7 @@ if __name__ == '__main__':
 # 3.
 # from website.db_utils import add_device_data
 # Example command to add data for a device with device_id=1
-# add_device_data(serial_number='SN123456', value1=50.5, value2=30.7) # tag: usage-serial-number-change -> this device id was changed to relate to serial number in models.py
+# add_device_data(serial_number='SN123456', ax=0.01, ay=0.02, az=0.98, gx=1.5, gy=-0.5, gz=0.0)
 
 
 

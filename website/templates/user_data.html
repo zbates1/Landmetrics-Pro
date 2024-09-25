@@ -26,6 +26,17 @@
         </div>
     </div>
 
+    <!-- Data Selection Section -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <label for="dataSelect" class="form-label">Select Data to Display</label>
+            <select id="dataSelect" class="form-select form-select-lg mb-3" onchange="updateGraph()">
+                <option value="acceleration">Acceleration (ax, ay, az)</option>
+                <option value="gyroscope">Gyroscope (gx, gy, gz)</option>
+            </select>
+        </div>
+    </div>
+
     <!-- Graph Type Selection -->
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
@@ -62,7 +73,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     {% if selected_device_id %}
-      updateGraph('line'); // Initializes the graph if a device is selected
+      updateGraph(); // Initializes the graph if a device is selected
     {% endif %}
   });
 
@@ -74,26 +85,72 @@
     }
   }
 
-  function updateGraph(selectedType) {
+  function updateGraph() {
     const ctx = document.getElementById('userDataChart').getContext('2d');
-    const graphType = selectedType || document.getElementById('graphType').value;
+    const graphType = document.getElementById('graphType').value;
+    const dataType = document.getElementById('dataSelect').value;
+
+    // Prepare datasets based on selected data type
+    let datasets = [];
+    if (dataType === 'acceleration') {
+      datasets = [
+        {
+          label: 'ax',
+          data: {{ ax_array | tojson }},
+          borderColor: 'rgb(255, 99, 132)',
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          tension: 0.1,
+          fill: false
+        },
+        {
+          label: 'ay',
+          data: {{ ay_array | tojson }},
+          borderColor: 'rgb(54, 162, 235)',
+          backgroundColor: 'rgba(54, 162, 235, 0.5)',
+          tension: 0.1,
+          fill: false
+        },
+        {
+          label: 'az',
+          data: {{ az_array | tojson }},
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.5)',
+          tension: 0.1,
+          fill: false
+        }
+      ];
+    } else if (dataType === 'gyroscope') {
+      datasets = [
+        {
+          label: 'gx',
+          data: {{ gx_array | tojson }},
+          borderColor: 'rgb(153, 102, 255)',
+          backgroundColor: 'rgba(153, 102, 255, 0.5)',
+          tension: 0.1,
+          fill: false
+        },
+        {
+          label: 'gy',
+          data: {{ gy_array | tojson }},
+          borderColor: 'rgb(255, 159, 64)',
+          backgroundColor: 'rgba(255, 159, 64, 0.5)',
+          tension: 0.1,
+          fill: false
+        },
+        {
+          label: 'gz',
+          data: {{ gz_array | tojson }},
+          borderColor: 'rgb(255, 206, 86)',
+          backgroundColor: 'rgba(255, 206, 86, 0.5)',
+          tension: 0.1,
+          fill: false
+        }
+      ];
+    }
+
     const chartData = {
       labels: {{ labels | tojson }},
-      datasets: [{
-        label: 'Dataset 1',
-        data: {{ sample_array_1 | tojson }},
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        tension: 0.1,
-        fill: graphType === 'line' ? false : true
-      }, {
-        label: 'Dataset 2',
-        data: {{ sample_array_2 | tojson }},
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        tension: 0.1,
-        fill: graphType === 'line' ? false : true
-      }]
+      datasets: datasets
     };
 
     // Clear existing canvas to redraw
@@ -106,15 +163,53 @@
       data: chartData,
       options: {
         scales: {
+          x: {
+            type: 'time',
+            time: {
+              parser: 'YYYY-MM-DD HH:mm:ss',
+              tooltipFormat: 'll HH:mm',
+              unit: 'minute',
+              displayFormats: {
+                minute: 'HH:mm'
+              }
+            },
+            title: {
+              display: true,
+              text: 'Timestamp'
+            }
+          },
           y: {
-            beginAtZero: true
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: dataType === 'acceleration' ? 'Acceleration (g)' : 'Angular Velocity (°/s)'
+            }
           }
+        },
+        plugins: {
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          },
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              mode: 'x',
+            }
+          }
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false,
         }
       }
     });
   }
 </script>
 
+<!-- Download Graph -->
 <script>
   document.getElementById('downloadGraph').addEventListener('click', function() {
     const url = window.userDataChart.toBase64Image();
@@ -125,11 +220,17 @@
   });
 </script>
 
+<!-- Download Data -->
 <script>
   document.getElementById('downloadData').addEventListener('click', function() {
     const data = {
-      SampleData1: {{ sample_array_1 | tojson }},
-      SampleData2: {{ sample_array_2 | tojson }}
+      labels: {{ labels | tojson }},
+      ax: {{ ax_array | tojson }},
+      ay: {{ ay_array | tojson }},
+      az: {{ az_array | tojson }},
+      gx: {{ gx_array | tojson }},
+      gy: {{ gy_array | tojson }},
+      gz: {{ gz_array | tojson }}
     };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
     const link = document.createElement('a');

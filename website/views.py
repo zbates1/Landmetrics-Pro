@@ -30,6 +30,7 @@ logger.addHandler(handler)
 
 @views.route('/', methods=['GET', 'POST'])
 def home():
+    # tag: delete -> This stuff below could prolly get deleted cuz it is just needed for the Notes db -- deleted
     if request.method == 'POST':
         note = request.form.get('note')
 

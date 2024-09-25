@@ -12,6 +12,7 @@ from flask_wtf import CSRFProtect
 from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash
 from .config import Config  # Base configuration class
 
@@ -20,6 +21,8 @@ db = SQLAlchemy()
 csrf = CSRFProtect()
 login_manager = LoginManager()
 admin = Admin()
+migrate = Migrate()
+
 
 def create_app(config_class):
     """
@@ -70,6 +73,7 @@ def initialize_extensions(app):
     csrf.init_app(app)
     login_manager.init_app(app)
     admin.init_app(app)
+    migrate.init_app(app, db)
 
 def register_blueprints(app):
     """

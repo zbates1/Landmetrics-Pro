@@ -1,3 +1,6 @@
+# Migrations
+migrations
+
 # Byte-compiled / optimized / DLL files
 website/__pycache__
 *.py[cod]
