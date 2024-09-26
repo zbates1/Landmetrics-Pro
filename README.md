@@ -151,33 +151,24 @@ python db_utils.py --list-users
 python db_utils.py --list-devices-for-user 1
 ```
 
+You can definitely use sqlite3 db_name to access your db and use SQL queries as an alternative!
 
-## Production Database Access (Heroku Postgres)
+## Two ways to Access production-database:
 
-For production environments, you’ll need to connect to the Heroku Postgres database. Follow these steps:
-
-### **Connect to the Postgres Database via Heroku**
-```bash
-heroku login
-```
-### Access the Postgres CLI:
-```bash
-heroku pg:psql --app your-app-name
-```
-### Check Database Details:
-```bash
-heroku config --app your-app-name
-```
-
-## Accessing Database Utilities in Production with Flask Shell
+## Method 1: Accessing Database Utilities in Production with Flask Shell
 
 In production, use Flask Shell or SQLAlchemy with the connection string from your environment variables (usually DATABASE_URL for Heroku).
 
-### Set FLASK_APP in Heroku Config Vars **this method works with Landmetrics-Pro**:
+### 1. **Connect to the Postgres Database via Heroku**
+```bash
+heroku login
+```
+
+### 2. Set FLASK_APP in Heroku Config Vars **this method works with Landmetrics-Pro**:
 ```bash
 heroku config:set FLASK_APP=main:app --app landmetrics-pro
 ```
-### Run the Flask Shell:
+### 3. Run the Flask Shell:
 ```bash
 heroku run --app landmetrics-pro flask shell
 ```
@@ -186,7 +177,31 @@ or
 heroku run --app landmetrics-pro flask --app main:app shell
 ```
 
-This allows you to use the same utility functions in a live production environment, such as the local flask shell commands for local development shown above. 
+## Method 2: Access Heroku Postgres DB CLI
+You can do this from your local VSCode IDE -> you do need to be in WSL for a windows machine!
+
+### Download postgres on WSL or Apple Machine
+```bash
+sudo apt-get update
+sudo apt-get install postgresql postgresql-contrib
+```
+### 2. Connect to Postgres DB in your bash terminal:
+```bash
+psql postgres://user:pass@hostname:5432/dbname # your DATABASE_URL
+```
+Now you can use the postgres interface to alter your databases. This is for more high-level stuff, like deleting tables, checking migrations, and such, whilst the commands above are for admin-user purposes
+
+## Connecting to Heroku Bash
+You may need to do this to manually delete some scripts on the production server, such as migration scripts in my case. 
+
+### Login to Heroku: If you haven't logged in yet, run
+```bash
+heroku login
+```
+### Connect to Postgres DB in your bash terminal:
+```bash
+heroku run bash --app your-app-name # landmetrics-pro for us
+```
 
 ## 🔥 Urgent To-Do List
 
