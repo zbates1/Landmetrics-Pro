@@ -45,7 +45,7 @@ def home():
 
 # Taking data from the Arduino ESP32
 @views.route('/api/data', methods=['POST'])
-@csrf.exempt  # Exempt the route from CSRF protection
+@csrf.exempt
 def receive_data():
     data = request.get_json()
 
@@ -54,36 +54,33 @@ def receive_data():
         logger.error("No JSON data received")
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
 
-    # Extract data from the request
-    device_serial_number = data.get('device_name')  # Assuming device_name from the Arduino payload
-    time_sent = data.get('time')  # The time column from your dataset
+    device_serial_number = data.get('device_name')
+    timestamps = data.get('timestamps')
 
-    # Ax1, Ay1, Az1, Gx1, Gy1, Gz1 for three sets of readings
-    ax1, ay1, az1 = data.get('Ax1'), data.get('Ay1'), data.get('Az1')
-    gx1, gy1, gz1 = data.get('Gx1'), data.get('Gy1'), data.get('Gz1')
-
-    ax2, ay2, az2 = data.get('Ax2'), data.get('Ay2'), data.get('Az2')
-    gx2, gy2, gz2 = data.get('Gx2'), data.get('Gy2'), data.get('Gz2')
-
-    ax3, ay3, az3 = data.get('Ax3'), data.get('Ay3'), data.get('Az3')
-    gx3, gy3, gz3 = data.get('Gx3'), data.get('Gy3'), data.get('Gz3')
-    
-    logger.info(f"Extracted data - device_serial_number: {device_serial_number}, time_sent: {time_sent}")
-    logger.info(f"Ax1: {ax1}, Ay1: {ay1}, Az1: {az1}, Gx1: {gx1}, Gy1: {gy1}, Gz1: {gz1}")
-    logger.info(f"Ax2: {ax2}, Ay2: {ay2}, Az2: {az2}, Gx2: {gx2}, Gy2: {gy2}, Gz2: {gz2}")
-    logger.info(f"Ax3: {ax3}, Ay3: {ay3}, Az3: {az3}, Gx3: {gx3}, Gy3: {gy3}, Gz3: {gz3}")
-
-    # Validate that all required fields are present
-    required_fields = [
-        device_serial_number, time_sent,
-        ax1, ay1, az1, gx1, gy1, gz1,
-        ax2, ay2, az2, gx2, gy2, gz2,
-        ax3, ay3, az3, gx3, gy3, gz3
+    # List of all sensor variables
+    sensor_variables = [
+        'Ax1', 'Ay1', 'Az1', 'Gx1', 'Gy1', 'Gz1',
+        'Ax2', 'Ay2', 'Az2', 'Gx2', 'Gy2', 'Gz2',
+        'Ax3', 'Ay3', 'Az3', 'Gx3', 'Gy3', 'Gz3'
     ]
 
-    if any(field is None for field in required_fields):
-        logger.error("Missing data fields in the received JSON")
-        return jsonify({"status": "error", "message": "Missing data fields"}), 400
+    # Ensure all required data is present
+    if not device_serial_number or not timestamps:
+        logger.error("Missing device_name or timestamps in the received JSON")
+        return jsonify({"status": "error", "message": "Missing device_name or timestamps"}), 400
+
+    sensor_data = {}
+    for var in sensor_variables:
+        sensor_data[var] = data.get(var)
+        if sensor_data[var] is None:
+            logger.error(f"Missing data for {var}")
+            return jsonify({"status": "error", "message": f"Missing data for {var}"}), 400
+
+    # Check that all arrays are the same length
+    data_length = len(timestamps)
+    if any(len(sensor_data[var]) != data_length for var in sensor_variables):
+        logger.error("Mismatch in lengths of data arrays")
+        return jsonify({"status": "error", "message": "Mismatch in lengths of data arrays"}), 400
 
     # Find the device in the database
     device = Device.query.filter_by(serial_number=device_serial_number).first()
@@ -91,23 +88,30 @@ def receive_data():
         logger.error(f"Device with serial_number {device_serial_number} not found in the database")
         return jsonify({"status": "error", "message": "Device not found"}), 404
 
-    # Create a new DeviceData entry
-    new_data = DeviceData(
-        device_id=device.id,
-        time=time_sent,
-        request_timestamp=datetime.utcnow(),
-        ax1=ax1, ay1=ay1, az1=az1, gx1=gx1, gy1=gy1, gz1=gz1,
-        ax2=ax2, ay2=ay2, az2=az2, gx2=gx2, gy2=gy2, gz2=gz2,
-        ax3=ax3, ay3=ay3, az3=az3, gx3=gx3, gy3=gy3, gz3=gz3
-    )
+    # Prepare data entries
+    new_data_entries = []
+    for i in range(data_length):
+        new_data = DeviceData(
+            device_id=device.id,
+            time=timestamps[i],
+            request_timestamp=datetime.utcnow(),
+            ax1=sensor_data['Ax1'][i], ay1=sensor_data['Ay1'][i], az1=sensor_data['Az1'][i],
+            gx1=sensor_data['Gx1'][i], gy1=sensor_data['Gy1'][i], gz1=sensor_data['Gz1'][i],
+            ax2=sensor_data['Ax2'][i], ay2=sensor_data['Ay2'][i], az2=sensor_data['Az2'][i],
+            gx2=sensor_data['Gx2'][i], gy2=sensor_data['Gy2'][i], gz2=sensor_data['Gz2'][i],
+            ax3=sensor_data['Ax3'][i], ay3=sensor_data['Ay3'][i], az3=sensor_data['Az3'][i],
+            gx3=sensor_data['Gx3'][i], gy3=sensor_data['Gy3'][i], gz3=sensor_data['Gz3'][i]
+        )
+        new_data_entries.append(new_data)
 
+    # Bulk insert all data entries
     try:
-        db.session.add(new_data)
+        db.session.bulk_save_objects(new_data_entries)
         db.session.commit()
-        logger.info(f"Data saved for Device with serial_number {device_serial_number}")
+        logger.info(f"Saved {len(new_data_entries)} data points for Device with serial_number {device_serial_number}")
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Database error when saving data for Device with serial_number {device_serial_number}: {str(e)}")
+        logger.error(f"Database error when saving data: {str(e)}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
 
-    return jsonify({"status": "success", "message": "Data received and saved"}), 200
+    return jsonify({"status": "success", "message": f"{len(new_data_entries)} data points received and saved"}), 200

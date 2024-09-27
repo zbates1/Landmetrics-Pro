@@ -203,6 +203,24 @@ heroku login
 heroku run bash --app your-app-name # landmetrics-pro for us
 ```
 
+# Two ways to Access production-database:
+
+## Development/Local SQLITE3 DB
+1. switch to WSL
+2. find IP of flask
+3. use CURL
+### send CURL command:
+```bash
+curl -X POST http://172.23.112.1:5000/api/data -H "Content-Type: application/json" -d @data.json
+```
+## Now, how to do it in production Heroku Postgres DB
+```bash
+curl -X POST http://your-server-address/api/data \
+     -H "Content-Type: application/json" \
+     -d @data.json
+```
+
+
 ## 🔥 Urgent To-Do List
 
 - [ ] 🤖 **Prototype Integration**: Arduino/Raspberry Pi → SQL → Web display.
