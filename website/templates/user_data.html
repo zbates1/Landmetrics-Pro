@@ -17,39 +17,36 @@
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="deviceSelect" class="form-label">Select a Device</label>
-            <select id="deviceSelect" class="form-select form-select-lg mb-3" onchange="onDeviceChange()">
-                <option value="" disabled selected>Select a Device</option>
-                {% for device in devices %}
-                    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>{{ device.name }}</option>
-                {% endfor %}
+            <select id="deviceSelect" class="form-select form-select-lg mb-3">
+                <!-- Options will be populated via JavaScript -->
             </select>
         </div>
     </div>
 
-    <!-- Data Selection Section -->
-    <div class="row mb-4">
+    <!-- Timestamp Selection Section -->
+    <div class="row mb-4" id="timestampSection" style="display: none;">
         <div class="col-md-6 mx-auto">
-            <label for="dataSelect" class="form-label">Select Data to Display</label>
-            <select id="dataSelect" class="form-select form-select-lg mb-3" onchange="updateGraph()">
-                <option value="acceleration">Acceleration (ax, ay, az)</option>
-                <option value="gyroscope">Gyroscope (gx, gy, gz)</option>
+            <label for="timestampSelect" class="form-label">Select a Timestamp</label>
+            <select id="timestampSelect" class="form-select form-select-lg mb-3">
+                <option value="all" selected>All Timestamps</option>
+                <!-- Options will be populated dynamically -->
             </select>
         </div>
     </div>
 
     <!-- Graph Type Selection -->
-    <div class="row mb-4">
+    <div class="row mb-4" id="graphTypeSection" style="display: none;">
         <div class="col-md-6 mx-auto">
             <label for="graphType" class="form-label">Select Graph Type</label>
-            <select id="graphType" class="form-select form-select-lg mb-3" onchange="updateGraph()">
+            <select id="graphType" class="form-select form-select-lg mb-3">
                 <option value="line">Line Chart</option>
-                <option value="bar">Bar Chart</option>
+                <option value="scatter">Scatter Plot Matrix</option>
             </select>
         </div>
     </div>
 
     <!-- Chart Area -->
-    <div class="row mb-5">
+    <div class="row mb-5" id="chartArea" style="display: none;">
         <div class="col-md-10 mx-auto">
             <div class="chart-container" style="position: relative; height: 60vh; width: 100%;">
                 <canvas id="userDataChart"></canvas>
@@ -58,7 +55,7 @@
     </div>
 
     <!-- Download Buttons -->
-    <div class="row text-center mb-5">
+    <div class="row text-center mb-5" id="downloadButtons" style="display: none;">
         <div class="col-md-6">
             <button id="downloadGraph" class="btn btn-primary btn-lg">Download Graph</button>
         </div>
@@ -68,176 +65,282 @@
     </div>
 </div>
 
+<!-- Include Chart.js and other necessary scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    {% if selected_device_id %}
-      updateGraph(); // Initializes the graph if a device is selected
-    {% endif %}
-  });
-
-  function onDeviceChange() {
-    const deviceId = document.getElementById('deviceSelect').value;
-    if (deviceId) {
-      // Redirect to the same page with the selected device ID as a query parameter
-      window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
-    }
-  }
-
-  function updateGraph() {
-    const ctx = document.getElementById('userDataChart').getContext('2d');
-    const graphType = document.getElementById('graphType').value;
-    const dataType = document.getElementById('dataSelect').value;
-
-    // Prepare datasets based on selected data type
-    let datasets = [];
-    if (dataType === 'acceleration') {
-      datasets = [
-        {
-          label: 'ax',
-          data: {{ ax_array | tojson }},
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-          tension: 0.1,
-          fill: false
-        },
-        {
-          label: 'ay',
-          data: {{ ay_array | tojson }},
-          borderColor: 'rgb(54, 162, 235)',
-          backgroundColor: 'rgba(54, 162, 235, 0.5)',
-          tension: 0.1,
-          fill: false
-        },
-        {
-          label: 'az',
-          data: {{ az_array | tojson }},
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.5)',
-          tension: 0.1,
-          fill: false
-        }
-      ];
-    } else if (dataType === 'gyroscope') {
-      datasets = [
-        {
-          label: 'gx',
-          data: {{ gx_array | tojson }},
-          borderColor: 'rgb(153, 102, 255)',
-          backgroundColor: 'rgba(153, 102, 255, 0.5)',
-          tension: 0.1,
-          fill: false
-        },
-        {
-          label: 'gy',
-          data: {{ gy_array | tojson }},
-          borderColor: 'rgb(255, 159, 64)',
-          backgroundColor: 'rgba(255, 159, 64, 0.5)',
-          tension: 0.1,
-          fill: false
-        },
-        {
-          label: 'gz',
-          data: {{ gz_array | tojson }},
-          borderColor: 'rgb(255, 206, 86)',
-          backgroundColor: 'rgba(255, 206, 86, 0.5)',
-          tension: 0.1,
-          fill: false
-        }
-      ];
+    // Data from the server
+    const deviceData = {{ device_data | default({}) | tojson }};
+    const devices = {{ devices | tojson }};
+    let selectedDeviceId = "{{ selected_device_id | default('') }}";
+    if (selectedDeviceId) {
+        selectedDeviceId = parseInt(selectedDeviceId);
+    } else {
+        selectedDeviceId = null;
     }
 
-    const chartData = {
-      labels: {{ labels | tojson }},
-      datasets: datasets
-    };
+    document.addEventListener('DOMContentLoaded', function () {
+        const deviceSelect = document.getElementById('deviceSelect');
+        const timestampSelect = document.getElementById('timestampSelect');
+        const graphTypeSelect = document.getElementById('graphType');
 
-    // Clear existing canvas to redraw
-    if (window.userDataChart && typeof window.userDataChart.destroy === 'function') {
-        window.userDataChart.destroy();
-    }
+        // Populate device dropdown
+        deviceSelect.innerHTML = '<option value="" disabled>Select a Device</option>';
+        devices.forEach(device => {
+            const option = document.createElement('option');
+            option.value = device.id;
+            option.textContent = device.name;
+            if (device.id === selectedDeviceId) {
+                option.selected = true;
+            }
+            deviceSelect.appendChild(option);
+        });
 
-    window.userDataChart = new Chart(ctx, {
-      type: graphType,
-      data: chartData,
-      options: {
-        scales: {
-          x: {
-            type: 'time',
-            time: {
-              parser: 'YYYY-MM-DD HH:mm:ss',
-              tooltipFormat: 'll HH:mm',
-              unit: 'minute',
-              displayFormats: {
-                minute: 'HH:mm'
-              }
-            },
-            title: {
-              display: true,
-              text: 'Timestamp'
-            }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: dataType === 'acceleration' ? 'Acceleration (g)' : 'Angular Velocity (°/s)'
-            }
-          }
-        },
-        plugins: {
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-          },
-          zoom: {
-            zoom: {
-              wheel: {
-                enabled: true,
-              },
-              mode: 'x',
-            }
-          }
-        },
-        interaction: {
-          mode: 'index',
-          intersect: false,
+        // Initialize device selection
+        deviceSelect.addEventListener('change', onDeviceChange);
+
+        // Initialize timestamp selection
+        timestampSelect.addEventListener('change', updateGraph);
+
+        // Initialize graph type selection
+        graphTypeSelect.addEventListener('change', updateGraph);
+
+        // If a device is already selected, populate timestamps
+        if (selectedDeviceId) {
+            populateTimestamps(selectedDeviceId);
         }
-      }
     });
-  }
-</script>
 
-<!-- Download Graph -->
-<script>
-  document.getElementById('downloadGraph').addEventListener('click', function() {
-    const url = window.userDataChart.toBase64Image();
-    const link = document.createElement('a');
-    link.download = 'userDataChart.png';
-    link.href = url;
-    link.click();
-  });
-</script>
+    function onDeviceChange() {
+        const deviceId = document.getElementById('deviceSelect').value;
+        if (deviceId) {
+            // Redirect to the same page with the selected device ID as a query parameter
+            window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
+        }
+    }
 
-<!-- Download Data -->
-<script>
-  document.getElementById('downloadData').addEventListener('click', function() {
-    const data = {
-      labels: {{ labels | tojson }},
-      ax: {{ ax_array | tojson }},
-      ay: {{ ay_array | tojson }},
-      az: {{ az_array | tojson }},
-      gx: {{ gx_array | tojson }},
-      gy: {{ gy_array | tojson }},
-      gz: {{ gz_array | tojson }}
-    };
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-    const link = document.createElement('a');
-    link.download = 'userData.json';
-    link.href = dataStr;
-    link.click();
-  });
+    function populateTimestamps(deviceId) {
+        const timestampSection = document.getElementById('timestampSection');
+        const timestampSelect = document.getElementById('timestampSelect');
+
+        // Clear existing options
+        timestampSelect.innerHTML = '<option value="all" selected>All Timestamps</option>';
+
+        // Get timestamps for the selected device
+        const timestamps = deviceData[deviceId]?.timestamps || [];
+
+        // Populate the timestamp dropdown
+        timestamps.forEach((timestamp, index) => {
+            const option = document.createElement('option');
+            option.value = index; // Use index to reference the data point
+            option.textContent = timestamp;
+            timestampSelect.appendChild(option);
+        });
+
+        // Show the timestamp selection and graph type selection
+        timestampSection.style.display = 'block';
+        document.getElementById('graphTypeSection').style.display = 'block';
+
+        // Update the graph
+        updateGraph();
+    }
+
+    function updateGraph() {
+        const ctx = document.getElementById('userDataChart').getContext('2d');
+        const graphType = document.getElementById('graphType').value;
+        const deviceId = selectedDeviceId;
+        const timestampIndex = document.getElementById('timestampSelect').value;
+
+        if (!deviceId) {
+            alert('Please select a device.');
+            return;
+        }
+
+        // Get data for the selected device
+        const dataForDevice = deviceData[deviceId];
+        if (!dataForDevice) {
+            alert('No data available for the selected device.');
+            return;
+        }
+
+        let labels = [];
+        let datasets = [];
+        const variables = ['ax1', 'ay1', 'az1', 'gx1', 'gy1', 'gz1',
+                           'ax2', 'ay2', 'az2', 'gx2', 'gy2', 'gz2',
+                           'ax3', 'ay3', 'az3', 'gx3', 'gy3', 'gz3'];
+
+        const colors = [
+            'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(75, 192, 192)',
+            'rgb(153, 102, 255)', 'rgb(255, 159, 64)', 'rgb(255, 206, 86)',
+            'rgb(255, 99, 71)', 'rgb(60, 179, 113)', 'rgb(106, 90, 205)',
+            'rgb(255, 140, 0)', 'rgb(147, 112, 219)', 'rgb(0, 206, 209)',
+            'rgb(210, 105, 30)', 'rgb(46, 139, 87)', 'rgb(112, 128, 144)',
+            'rgb(255, 215, 0)', 'rgb(0, 191, 255)', 'rgb(218, 112, 214)'
+        ];
+
+        if (timestampIndex === 'all') {
+            // Use all data points
+            labels = dataForDevice.timestamps;
+
+            variables.forEach((variable, index) => {
+                datasets.push({
+                    label: variable,
+                    data: dataForDevice[variable],
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    tension: 0.1,
+                    fill: false,
+                    showLine: graphType === 'line'
+                });
+            });
+        } else {
+            // Use data for the selected timestamp
+            const idx = parseInt(timestampIndex);
+            labels = [dataForDevice.timestamps[idx]];
+
+            variables.forEach((variable, index) => {
+                datasets.push({
+                    label: variable,
+                    data: [dataForDevice[variable][idx]],
+                    backgroundColor: colors[index % colors.length],
+                    fill: true
+                });
+            });
+        }
+
+        // Clear existing canvas to redraw
+        if (window.userDataChart && typeof window.userDataChart.destroy === 'function') {
+            window.userDataChart.destroy();
+        }
+
+        // Show chart area and download buttons
+        document.getElementById('chartArea').style.display = 'block';
+        document.getElementById('downloadButtons').style.display = 'block';
+
+        if (graphType === 'line') {
+            window.userDataChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sensor Values'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        } else if (graphType === 'scatter') {
+            // Suggestion: Scatter Plot Matrix
+            // For simplicity, we'll create a scatter plot of variables against time
+            datasets.forEach(dataset => {
+                dataset.type = 'scatter';
+            });
+
+            window.userDataChart = new Chart(ctx, {
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sensor Values'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'nearest',
+                            intersect: true,
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Download Graph
+    document.getElementById('downloadGraph').addEventListener('click', function() {
+        if (window.userDataChart) {
+            const url = window.userDataChart.toBase64Image();
+            const link = document.createElement('a');
+            link.download = 'userDataChart.png';
+            link.href = url;
+            link.click();
+        } else {
+            alert('No graph available to download.');
+        }
+    });
+
+    // Download Data
+    document.getElementById('downloadData').addEventListener('click', function() {
+        if (window.userDataChart) {
+            const deviceId = selectedDeviceId;
+            const timestampIndex = document.getElementById('timestampSelect').value;
+            const dataForDevice = deviceData[deviceId];
+
+            let dataToDownload = {};
+
+            if (timestampIndex === 'all') {
+                dataToDownload = dataForDevice;
+            } else {
+                const idx = parseInt(timestampIndex);
+                dataToDownload.timestamps = [dataForDevice.timestamps[idx]];
+                const variables = Object.keys(dataForDevice).filter(key => key !== 'timestamps');
+                variables.forEach(variable => {
+                    dataToDownload[variable] = [dataForDevice[variable][idx]];
+                });
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToDownload));
+            const link = document.createElement('a');
+            link.download = 'userData.json';
+            link.href = dataStr;
+            link.click();
+        } else {
+            alert('No data available to download.');
+        }
+    });
 </script>
 
 {% endblock %}

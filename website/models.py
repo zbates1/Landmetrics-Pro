@@ -32,17 +32,35 @@ class Device(db.Model):
 class DeviceData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
-    # New fields for accelerometer and gyroscope data
-    ax = db.Column(db.Float, nullable=False)
-    ay = db.Column(db.Float, nullable=False)
-    az = db.Column(db.Float, nullable=False)
-    gx = db.Column(db.Float, nullable=False)
-    gy = db.Column(db.Float, nullable=False)
-    gz = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), default=func.now())  # Timestamp of data creation in the DB
+    request_timestamp = db.Column(db.DateTime(timezone=True))  # When the HTTP request was sent
+    time = db.Column(db.Float, nullable=False)  # This represents the time value from the data
+    
+    # Accelerometer and gyroscope data for three sets of readings
+    ax1 = db.Column(db.Float, nullable=False)
+    ay1 = db.Column(db.Float, nullable=False)
+    az1 = db.Column(db.Float, nullable=False)
+    gx1 = db.Column(db.Float, nullable=False)
+    gy1 = db.Column(db.Float, nullable=False)
+    gz1 = db.Column(db.Float, nullable=False)
+
+    ax2 = db.Column(db.Float, nullable=False)
+    ay2 = db.Column(db.Float, nullable=False)
+    az2 = db.Column(db.Float, nullable=False)
+    gx2 = db.Column(db.Float, nullable=False)
+    gy2 = db.Column(db.Float, nullable=False)
+    gz2 = db.Column(db.Float, nullable=False)
+
+    ax3 = db.Column(db.Float, nullable=False)
+    ay3 = db.Column(db.Float, nullable=False)
+    az3 = db.Column(db.Float, nullable=False)
+    gx3 = db.Column(db.Float, nullable=False)
+    gy3 = db.Column(db.Float, nullable=False)
+    gz3 = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
         return f'<DeviceData {self.id} for Device {self.device_id}>'
+
 
 
 @event.listens_for(User.password, 'set', retval=True)

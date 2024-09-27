@@ -1,7 +1,10 @@
+# db_utils.py
 from .models import User, Device, DeviceData
 from werkzeug.security import generate_password_hash
 from . import db
 from sqlalchemy import func
+from datetime import datetime
+
 
 # Add a new user
 def add_user(email, password, first_name):
@@ -23,17 +26,16 @@ def add_device(name, device_type, serial_number, user_id):
         print(f'User with id {user_id} does not exist.')
 
 # Updated add_device_data function
-def add_device_data(serial_number, ax, ay, az, gx, gy, gz):
+def add_device_data(serial_number, time, ax1, ay1, az1, gx1, gy1, gz1, ax2, ay2, az2, gx2, gy2, gz2, ax3, ay3, az3, gx3, gy3, gz3):
     device = Device.query.filter_by(serial_number=serial_number).first()  # Query by serial_number
     if device:
         new_data = DeviceData(
             device_id=device.id,
-            ax=ax,
-            ay=ay,
-            az=az,
-            gx=gx,
-            gy=gy,
-            gz=gz
+            time=time,  # Time from the Arduino data
+            request_timestamp=datetime.utcnow(),  # Timestamp of when the request was received
+            ax1=ax1, ay1=ay1, az1=az1, gx1=gx1, gy1=gy1, gz1=gz1,
+            ax2=ax2, ay2=ay2, az2=az2, gx2=gx2, gy2=gy2, gz2=gz2,
+            ax3=ax3, ay3=ay3, az3=az3, gx3=gx3, gy3=gy3, gz3=gz3
         )
         db.session.add(new_data)
         db.session.commit()
@@ -78,17 +80,21 @@ def list_all_devices():
 
 
 # Updated list_device_data function
+# Updated list_device_data function
 def list_device_data(serial_number):
     device = Device.query.filter_by(serial_number=serial_number).first()
     if device:
         if device.data_points:
             print(f"Data points for {device.name} (Serial: {device.serial_number}):")
-            print(f"{'Data ID':<10} {'Timestamp':<25} {'ax':<10} {'ay':<10} {'az':<10} {'gx':<10} {'gy':<10} {'gz':<10}")
-            print("=" * 105)
+            print(f"{'Data ID':<10} {'Timestamp':<25} {'Time':<10} {'Ax1':<10} {'Ay1':<10} {'Az1':<10} {'Gx1':<10} "
+                  f"{'Gy1':<10} {'Gz1':<10} {'Ax2':<10} {'Ay2':<10} {'Az2':<10} {'Gx2':<10} {'Gy2':<10} {'Gz2':<10} "
+                  f"{'Ax3':<10} {'Ay3':<10} {'Az3':<10} {'Gx3':<10} {'Gy3':<10} {'Gz3':<10}")
+            print("=" * 200)
             for data in device.data_points:
-                print(f"{data.id:<10} {data.timestamp.strftime('%Y-%m-%d %H:%M:%S'):<25} "
-                      f"{data.ax:<10.2f} {data.ay:<10.2f} {data.az:<10.2f} "
-                      f"{data.gx:<10.2f} {data.gy:<10.2f} {data.gz:<10.2f}")
+                print(f"{data.id:<10} {data.timestamp.strftime('%Y-%m-%d %H:%M:%S'):<25} {data.time:<10.2f} "
+                      f"{data.ax1:<10.2f} {data.ay1:<10.2f} {data.az1:<10.2f} {data.gx1:<10.2f} {data.gy1:<10.2f} {data.gz1:<10.2f} "
+                      f"{data.ax2:<10.2f} {data.ay2:<10.2f} {data.az2:<10.2f} {data.gx2:<10.2f} {data.gy2:<10.2f} {data.gz2:<10.2f} "
+                      f"{data.ax3:<10.2f} {data.ay3:<10.2f} {data.az3:<10.2f} {data.gx3:<10.2f} {data.gy3:<10.2f} {data.gz3:<10.2f}")
         else:
             print(f"No data points found for device {device.name}.")
     else:
@@ -143,8 +149,14 @@ if __name__ == '__main__':
 
 # 3.
 # from website.db_utils import add_device_data
-# Example command to add data for a device with device_id=1
-# add_device_data(serial_number='SN123456', ax=0.01, ay=0.02, az=0.98, gx=1.5, gy=-0.5, gz=0.0)
+# Example command to add data for a device with serial number 'SN123456'
+# add_device_data(
+#     serial_number='SN123456',
+#     time=2138,  # Time sent from the Arduino
+#     ax1=0.01, ay1=0.02, az1=0.98, gx1=1.5, gy1=-0.5, gz1=0.0,
+#     ax2=0.03, ay2=0.04, az2=1.02, gx2=1.2, gy2=-0.3, gz2=0.1,
+#     ax3=0.05, ay3=0.06, az3=1.05, gx3=1.0, gy3=-0.2, gz3=0.2
+# )
 
 
 
