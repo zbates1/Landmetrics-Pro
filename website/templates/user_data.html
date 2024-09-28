@@ -72,11 +72,11 @@
     // Data from the server
     const deviceData = {{ device_data | default({}) | tojson }};
     const devices = {{ devices | tojson }};
-    let selectedDeviceId = "{{ selected_device_id | default('') }}";
-    if (selectedDeviceId) {
+    let selectedDeviceId = {{ selected_device_id | tojson }};
+
+    // Ensure selectedDeviceId is an integer or null
+    if (selectedDeviceId !== null) {
         selectedDeviceId = parseInt(selectedDeviceId);
-    } else {
-        selectedDeviceId = null;
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -106,16 +106,20 @@
         graphTypeSelect.addEventListener('change', updateGraph);
 
         // If a device is already selected, populate timestamps
-        if (selectedDeviceId) {
+        if (selectedDeviceId !== null && !isNaN(selectedDeviceId)) {
             populateTimestamps(selectedDeviceId);
         }
     });
 
     function onDeviceChange() {
-        const deviceId = document.getElementById('deviceSelect').value;
-        if (deviceId) {
+        const deviceIdStr = document.getElementById('deviceSelect').value;
+        const deviceId = parseInt(deviceIdStr);
+
+        if (!isNaN(deviceId)) {
             // Redirect to the same page with the selected device ID as a query parameter
             window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
+        } else {
+            alert('Invalid device selected.');
         }
     }
 
