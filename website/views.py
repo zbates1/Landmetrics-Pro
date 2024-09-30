@@ -58,6 +58,12 @@ def receive_data():
     device_serial_number = data.get('device_name')
     timestamps = data.get('timestamps')
 
+    # Lets create request_timestamps at the beginning of the API request
+    # Create request_timestamps array the length of timestamps, filled with the same randomly generated timestamp
+    request_timestamps = random.randint(0, 1000000000)
+    request_timestamps = [request_timestamps for _ in range(len(timestamps))]
+
+
     # List of all sensor variables
     sensor_variables = [
         'Ax1', 'Ay1', 'Az1', 'Gx1', 'Gy1', 'Gz1',
@@ -97,7 +103,9 @@ def receive_data():
             time=timestamps[i],
             # request_timestamp=datetime.utcnow(),
             # replace request_timestamp with random string, 15 characters
-            request_timestamp=''.join([str(random.randint(0, 9)) for _ in range(15)]),
+            # request_timestamp=''.join([str(random.randint(0, 9)) for _ in range(15)]),
+            # Version 2 of implementation, need to create an array of same length as timestamps, with the same value; this method creates a unique value for each
+            request_timestamp=request_timestamps[i],
             ax1=sensor_data['Ax1'][i], ay1=sensor_data['Ay1'][i], az1=sensor_data['Az1'][i],
             gx1=sensor_data['Gx1'][i], gy1=sensor_data['Gy1'][i], gz1=sensor_data['Gz1'][i],
             ax2=sensor_data['Ax2'][i], ay2=sensor_data['Ay2'][i], az2=sensor_data['Az2'][i],
