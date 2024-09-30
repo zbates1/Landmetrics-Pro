@@ -5,6 +5,7 @@ from .models import Device, DeviceData
 from . import db, csrf
 import json
 from datetime import datetime
+import random
 
 views = Blueprint('views', __name__)
 
@@ -94,7 +95,9 @@ def receive_data():
         new_data = DeviceData(
             device_id=device.id,
             time=timestamps[i],
-            request_timestamp=datetime.utcnow(),
+            # request_timestamp=datetime.utcnow(),
+            # replace request_timestamp with random string, 15 characters
+            request_timestamp=''.join([str(random.randint(0, 9)) for _ in range(15)]),
             ax1=sensor_data['Ax1'][i], ay1=sensor_data['Ay1'][i], az1=sensor_data['Az1'][i],
             gx1=sensor_data['Gx1'][i], gy1=sensor_data['Gy1'][i], gz1=sensor_data['Gz1'][i],
             ax2=sensor_data['Ax2'][i], ay2=sensor_data['Ay2'][i], az2=sensor_data['Az2'][i],

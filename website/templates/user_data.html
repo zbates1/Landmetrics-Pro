@@ -11,7 +11,7 @@
         <div class="col-md-6 mx-auto">
             <label for="deviceSelect" class="form-label">Select a Device</label>
             <select id="deviceSelect" class="form-select">
-                <option value="" disabled selected>Select a Device</option>
+                <option value="" disabled {% if not selected_device_id %}selected{% endif %}>Select a Device</option>
                 {% for device in devices %}
                     <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>
                         {{ device.name }}
@@ -21,15 +21,17 @@
         </div>
     </div>
 
-    <!-- Timestamp Selection -->
+    <!-- Request Timestamp Selection -->
     {% if selected_device_id %}
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
-            <label for="timestampSelect" class="form-label">Select a Timestamp</label>
-            <select id="timestampSelect" class="form-select">
-                <option value="all" selected>All Timestamps</option>
-                {% for timestamp in device_data[selected_device_id]['timestamps'] %}
-                    <option value="{{ loop.index0 }}">{{ timestamp }}</option>
+            <label for="requestTimestampSelect" class="form-label">Select a Session (Request Timestamp)</label>
+            <select id="requestTimestampSelect" class="form-select">
+                <option value="" {% if not selected_request_timestamp %}selected{% endif %}>All Sessions</option>
+                {% for rt in request_timestamps %}
+                    <option value="{{ rt }}" {% if rt == selected_request_timestamp %}selected{% endif %}>
+                        {{ rt }}
+                    </option>
                 {% endfor %}
             </select>
         </div>
@@ -37,6 +39,7 @@
     {% endif %}
 
     <!-- Chart Type Selection -->
+    {% if device_data[selected_device_id] %}
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
@@ -45,14 +48,17 @@
                 <!-- Additional chart types can be added here -->
             </select>
         </div>
+    {% endif %}
     </div>
 
     <!-- Chart Area -->
+    {% if device_data[selected_device_id] %}
     <div class="row">
         <div class="col-md-12">
             <canvas id="dataChart" style="max-height: 500px;"></canvas>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Include Chart.js -->
@@ -62,28 +68,39 @@
     // Data passed from the server
     const deviceData = {{ device_data | tojson }};
     const selectedDeviceId = {{ selected_device_id | tojson }};
+    const selectedRequestTimestamp = {{ selected_request_timestamp | tojson }};
+    const requestTimestamps = {{ request_timestamps | tojson }};
 
     document.addEventListener('DOMContentLoaded', function() {
         const deviceSelect = document.getElementById('deviceSelect');
-        const timestampSelect = document.getElementById('timestampSelect');
+        const requestTimestampSelect = document.getElementById('requestTimestampSelect');
         const chartTypeSelect = document.getElementById('chartTypeSelect');
-        const ctx = document.getElementById('dataChart').getContext('2d');
+        const ctx = document.getElementById('dataChart') ? document.getElementById('dataChart').getContext('2d') : null;
 
         let chart;
 
         deviceSelect.addEventListener('change', function() {
             const deviceId = deviceSelect.value;
             if (deviceId) {
-                // Redirect to the same page with the selected device ID
+                // Redirect to the page with the selected device ID
                 window.location.href = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
             }
         });
 
-        if (timestampSelect) {
-            timestampSelect.addEventListener('change', updateChart);
+        if (requestTimestampSelect) {
+            requestTimestampSelect.addEventListener('change', function() {
+                const deviceId = deviceSelect.value;
+                const requestTimestamp = requestTimestampSelect.value;
+                let url = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
+                if (requestTimestamp) {
+                    url += "&request_timestamp=" + encodeURIComponent(requestTimestamp);
+                }
+                // Redirect to the URL with selected request_timestamp
+                window.location.href = url;
+            });
         }
 
-        if (chartTypeSelect) {
+        if (chartTypeSelect && ctx) {
             chartTypeSelect.addEventListener('change', updateChart);
         }
 
@@ -91,10 +108,9 @@
             const data = deviceData[selectedDeviceId];
             if (!data) return;
 
-            const selectedTimestampIndex = timestampSelect ? timestampSelect.value : 'all';
             const chartType = chartTypeSelect.value;
 
-            let labels = [];
+            let labels = data['timestamps'];
             let datasets = [];
 
             // List of sensor variables
@@ -123,33 +139,15 @@
                 'rgba(255, 255, 83, 0.6)'
             ];
 
-            if (selectedTimestampIndex === 'all') {
-                // Plot all data against time
-                labels = data['timestamps'];
-
-                variables.forEach((variable, index) => {
-                    datasets.push({
-                        label: variable,
-                        data: data[variable],
-                        borderColor: colors[index % colors.length],
-                        backgroundColor: colors[index % colors.length],
-                        fill: false
-                    });
+            variables.forEach((variable, index) => {
+                datasets.push({
+                    label: variable,
+                    data: data[variable],
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length],
+                    fill: false
                 });
-
-            } else {
-                // Plot data for a single timestamp
-                const index = parseInt(selectedTimestampIndex);
-                labels = [data['timestamps'][index]];
-
-                variables.forEach((variable, idx) => {
-                    datasets.push({
-                        label: variable,
-                        data: [data[variable][index]],
-                        backgroundColor: colors[idx % colors.length]
-                    });
-                });
-            }
+            });
 
             if (chart) {
                 chart.destroy();
@@ -194,7 +192,7 @@
         }
 
         // Initial chart rendering
-        if (selectedDeviceId && timestampSelect) {
+        if (selectedDeviceId && deviceData[selectedDeviceId] && ctx) {
             updateChart();
         }
     });

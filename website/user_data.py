@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
 from .models import User, Device, DeviceData
+from datetime import datetime
 
 # Initialize the blueprint
 data_view = Blueprint('data_view', __name__)
@@ -22,12 +23,13 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-def get_device_data(device_id):
+def get_device_data(device_id, request_timestamp=None):
     """
-    Retrieve data for a specific device belonging to the current user.
+    Retrieve data for a specific device and request_timestamp belonging to the current user.
 
     Args:
         device_id (int): The ID of the device.
+        request_timestamp (str): The request timestamp string.
 
     Returns:
         dict: A dictionary containing sensor data arrays and timestamps.
@@ -39,17 +41,15 @@ def get_device_data(device_id):
             logger.warning(f"Device ID {device_id} not found for user {current_user.id}")
             return {}
 
-        # Retrieve data points for the device
-        data_points = (
-            DeviceData.query
-            .filter_by(device_id=device_id)
-            .order_by(DeviceData.timestamp)
-            .all()
-        )
-        if not data_points:
-            logger.warning(f"No data points found for device ID {device_id}")
-            return {}
+        # Build the query for data points
+        query = DeviceData.query.filter_by(device_id=device_id)
+        if request_timestamp:
+            query = query.filter_by(request_timestamp=request_timestamp)
+        data_points = query.order_by(DeviceData.time).all()
 
+        if not data_points:
+            logger.warning(f"No data points found for device ID {device_id} and request_timestamp {request_timestamp}")
+            return {}
 
         # Prepare data structure
         data_dict = {
@@ -60,7 +60,9 @@ def get_device_data(device_id):
         }
 
         for data_point in data_points:
-            data_dict['timestamps'].append(data_point.timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+            # Convert data_point.time from float to datetime
+            timestamp_str = datetime.fromtimestamp(data_point.time).strftime('%Y-%m-%d %H:%M:%S')
+            data_dict['timestamps'].append(timestamp_str)
             data_dict['ax1'].append(data_point.ax1)
             data_dict['ay1'].append(data_point.ay1)
             data_dict['az1'].append(data_point.az1)
@@ -87,7 +89,6 @@ def get_device_data(device_id):
         flash("An error occurred while retrieving device data.", category='error')
         return {}
 
-
 @data_view.route('/user_data', methods=['GET'])
 @login_required
 def user_data():
@@ -96,27 +97,41 @@ def user_data():
         devices_query = Device.query.filter_by(user_id=current_user.id).all()
         devices = [{'id': device.id, 'name': device.name} for device in devices_query]
 
-        # Get the selected device ID from the query parameters
+        # Get the selected device ID and request timestamp from the query parameters
         selected_device_id = request.args.get('device_id', type=int)
+        selected_request_timestamp = request.args.get('request_timestamp')
 
         # Initialize data
         device_data = {}
+        request_timestamps = []
 
         if selected_device_id:
-            # Retrieve data for the selected device using the helper function
-            data_dict = get_device_data(selected_device_id)
+            # Get the list of unique request_timestamps for the selected device
+            request_timestamps_query = (
+                db.session.query(DeviceData.request_timestamp)
+                .filter_by(device_id=selected_device_id)
+                .distinct()
+                .order_by(DeviceData.request_timestamp)
+                .all()
+            )
+            # Extract unique request_timestamps
+            request_timestamps = [rt[0] for rt in request_timestamps_query]
+
+            # Retrieve data for the selected device and request_timestamp
+            data_dict = get_device_data(selected_device_id, selected_request_timestamp)
             if data_dict:
-                # Store data for the selected device using an integer key
+                # Store data for the selected device
                 device_data[selected_device_id] = data_dict
             else:
-                logger.warning(f"Device ID {selected_device_id} not found or no data available.")
-                flash("Selected device not found or no data available.", category='error')
-                return redirect(url_for('data_view.user_data'))
+                flash("No data available for the selected device and session.", category='error')
+                return redirect(url_for('data_view.user_data', device_id=selected_device_id))
 
         return render_template(
             "user_data.html",
             devices=devices,
             selected_device_id=selected_device_id,
+            request_timestamps=request_timestamps,
+            selected_request_timestamp=selected_request_timestamp,
             device_data=device_data,
             user=current_user,
         )
@@ -127,6 +142,6 @@ def user_data():
         return redirect(url_for('views.home'))
 
     except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error(f"An unexpected error occurred: {e}", exc_info=True)
         flash("An unexpected error occurred.", category='error')
         return redirect(url_for('views.home'))

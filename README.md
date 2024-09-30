@@ -214,6 +214,7 @@ heroku run bash --app your-app-name # landmetrics-pro for us
 1. switch to WSL
 2. find IP of flask
 3. use CURL
+ATTENTION: Because this uses WSL, the IP address will likely change, and ChatGPT can help with this
 ### send CURL command:
 ```bash
 curl -X POST http://172.23.112.1:5000/api/data -H "Content-Type: application/json" -d @data.json

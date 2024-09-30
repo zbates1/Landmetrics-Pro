@@ -33,7 +33,10 @@ class DeviceData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     device_id = db.Column(db.Integer, db.ForeignKey('device.id'), nullable=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=func.now())  # Timestamp of data creation in the DB
-    request_timestamp = db.Column(db.DateTime(timezone=True))  # When the HTTP request was sent
+    # request_timestamp = db.Column(db.DateTime(timezone=True))  # When the HTTP request was sent
+    # new request_timestamp without DateTime, it throws an error
+    request_timestamp = db.Column(db.String(150), nullable=False)
+
     time = db.Column(db.Float, nullable=False)  # This represents the time value from the data
     
     # Accelerometer and gyroscope data for three sets of readings
