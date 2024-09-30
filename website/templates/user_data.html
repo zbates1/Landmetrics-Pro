@@ -1,243 +1,178 @@
 {% extends "base.html" %}
 
-{% block title %}Landmetrics Pro Data Visualization{% endblock %}
+{% block title %}User Data Visualization{% endblock %}
 
 {% block content %}
 <div class="container my-5">
-    <style>
-        body {
-            margin: 0;
-            background: linear-gradient(to bottom, #f0f0f0, #a3ceac);
-        }
-    </style>
+    <h1 class="text-center mb-5">User Data Visualization</h1>
 
-    <h1 class="text-center mb-5">Landmetrics Pro - Data Visualization</h1>
-
-    <!-- Device Selection Section -->
+    <!-- Device Selection -->
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="deviceSelect" class="form-label">Select a Device</label>
-            <select id="deviceSelect" class="form-select form-select-lg mb-3">
-                <!-- Options will be populated via JavaScript -->
+            <select id="deviceSelect" class="form-select">
+                <option value="" disabled selected>Select a Device</option>
+                {% for device in devices %}
+                    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>
+                        {{ device.name }}
+                    </option>
+                {% endfor %}
             </select>
         </div>
     </div>
 
-    <!-- Timestamp Selection Section -->
-    <div class="row mb-4" id="timestampSection" style="display: none;">
+    <!-- Timestamp Selection -->
+    {% if selected_device_id %}
+    <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="timestampSelect" class="form-label">Select a Timestamp</label>
-            <select id="timestampSelect" class="form-select form-select-lg mb-3">
+            <select id="timestampSelect" class="form-select">
                 <option value="all" selected>All Timestamps</option>
-                <!-- Options will be populated dynamically -->
+                {% for timestamp in device_data[selected_device_id]['timestamps'] %}
+                    <option value="{{ loop.index0 }}">{{ timestamp }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Graph Type Selection -->
-    <div class="row mb-4" id="graphTypeSection" style="display: none;">
+    <!-- Chart Type Selection -->
+    <div class="row mb-4">
         <div class="col-md-6 mx-auto">
-            <label for="graphType" class="form-label">Select Graph Type</label>
-            <select id="graphType" class="form-select form-select-lg mb-3">
-                <option value="line">Line Chart</option>
-                <option value="scatter">Scatter Plot Matrix</option>
+            <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
+            <select id="chartTypeSelect" class="form-select">
+                <option value="line" selected>Line Chart</option>
+                <!-- Additional chart types can be added here -->
             </select>
         </div>
     </div>
 
     <!-- Chart Area -->
-    <div class="row mb-5" id="chartArea" style="display: none;">
-        <div class="col-md-10 mx-auto">
-            <div class="chart-container" style="position: relative; height: 60vh; width: 100%;">
-                <canvas id="userDataChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Download Buttons -->
-    <div class="row text-center mb-5" id="downloadButtons" style="display: none;">
-        <div class="col-md-6">
-            <button id="downloadGraph" class="btn btn-primary btn-lg">Download Graph</button>
-        </div>
-        <div class="col-md-6">
-            <button id="downloadData" class="btn btn-secondary btn-lg">Download Data</button>
+    <div class="row">
+        <div class="col-md-12">
+            <canvas id="dataChart" style="max-height: 500px;"></canvas>
         </div>
     </div>
 </div>
 
-<!-- Include Chart.js and other necessary scripts -->
+<!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // Data from the server
-    const deviceData = {{ device_data | default({}) | tojson }};
-    const devices = {{ devices | tojson }};
-    let selectedDeviceId = {{ selected_device_id | tojson }};
+    // Data passed from the server
+    const deviceData = {{ device_data | tojson }};
+    const selectedDeviceId = {{ selected_device_id | tojson }};
 
-    // Ensure selectedDeviceId is an integer or null
-    if (selectedDeviceId !== null) {
-        selectedDeviceId = parseInt(selectedDeviceId);
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const deviceSelect = document.getElementById('deviceSelect');
         const timestampSelect = document.getElementById('timestampSelect');
-        const graphTypeSelect = document.getElementById('graphType');
+        const chartTypeSelect = document.getElementById('chartTypeSelect');
+        const ctx = document.getElementById('dataChart').getContext('2d');
 
-        // Populate device dropdown
-        deviceSelect.innerHTML = '<option value="" disabled>Select a Device</option>';
-        devices.forEach(device => {
-            const option = document.createElement('option');
-            option.value = device.id;
-            option.textContent = device.name;
-            if (device.id === selectedDeviceId) {
-                option.selected = true;
+        let chart;
+
+        deviceSelect.addEventListener('change', function() {
+            const deviceId = deviceSelect.value;
+            if (deviceId) {
+                // Redirect to the same page with the selected device ID
+                window.location.href = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
             }
-            deviceSelect.appendChild(option);
         });
 
-        // Initialize device selection
-        deviceSelect.addEventListener('change', onDeviceChange);
-
-        // Initialize timestamp selection
-        timestampSelect.addEventListener('change', updateGraph);
-
-        // Initialize graph type selection
-        graphTypeSelect.addEventListener('change', updateGraph);
-
-        // If a device is already selected, populate timestamps
-        if (selectedDeviceId !== null && !isNaN(selectedDeviceId)) {
-            populateTimestamps(selectedDeviceId);
-        }
-    });
-
-    function onDeviceChange() {
-        const deviceIdStr = document.getElementById('deviceSelect').value;
-        const deviceId = parseInt(deviceIdStr);
-
-        if (!isNaN(deviceId)) {
-            // Redirect to the same page with the selected device ID as a query parameter
-            window.location.href = `{{ url_for('data_view.user_data') }}?device_id=${deviceId}`;
-        } else {
-            alert('Invalid device selected.');
-        }
-    }
-
-    function populateTimestamps(deviceId) {
-        const timestampSection = document.getElementById('timestampSection');
-        const timestampSelect = document.getElementById('timestampSelect');
-
-        // Clear existing options
-        timestampSelect.innerHTML = '<option value="all" selected>All Timestamps</option>';
-
-        // Get timestamps for the selected device
-        const timestamps = deviceData[deviceId]?.timestamps || [];
-
-        // Populate the timestamp dropdown
-        timestamps.forEach((timestamp, index) => {
-            const option = document.createElement('option');
-            option.value = index; // Use index to reference the data point
-            option.textContent = timestamp;
-            timestampSelect.appendChild(option);
-        });
-
-        // Show the timestamp selection and graph type selection
-        timestampSection.style.display = 'block';
-        document.getElementById('graphTypeSection').style.display = 'block';
-
-        // Update the graph
-        updateGraph();
-    }
-
-    function updateGraph() {
-        const ctx = document.getElementById('userDataChart').getContext('2d');
-        const graphType = document.getElementById('graphType').value;
-        const deviceId = selectedDeviceId;
-        const timestampIndex = document.getElementById('timestampSelect').value;
-
-        if (!deviceId) {
-            alert('Please select a device.');
-            return;
+        if (timestampSelect) {
+            timestampSelect.addEventListener('change', updateChart);
         }
 
-        // Get data for the selected device
-        const dataForDevice = deviceData[deviceId];
-        if (!dataForDevice) {
-            alert('No data available for the selected device.');
-            return;
+        if (chartTypeSelect) {
+            chartTypeSelect.addEventListener('change', updateChart);
         }
 
-        let labels = [];
-        let datasets = [];
-        const variables = ['ax1', 'ay1', 'az1', 'gx1', 'gy1', 'gz1',
-                           'ax2', 'ay2', 'az2', 'gx2', 'gy2', 'gz2',
-                           'ax3', 'ay3', 'az3', 'gx3', 'gy3', 'gz3'];
+        function updateChart() {
+            const data = deviceData[selectedDeviceId];
+            if (!data) return;
 
-        const colors = [
-            'rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(75, 192, 192)',
-            'rgb(153, 102, 255)', 'rgb(255, 159, 64)', 'rgb(255, 206, 86)',
-            'rgb(255, 99, 71)', 'rgb(60, 179, 113)', 'rgb(106, 90, 205)',
-            'rgb(255, 140, 0)', 'rgb(147, 112, 219)', 'rgb(0, 206, 209)',
-            'rgb(210, 105, 30)', 'rgb(46, 139, 87)', 'rgb(112, 128, 144)',
-            'rgb(255, 215, 0)', 'rgb(0, 191, 255)', 'rgb(218, 112, 214)'
-        ];
+            const selectedTimestampIndex = timestampSelect ? timestampSelect.value : 'all';
+            const chartType = chartTypeSelect.value;
 
-        if (timestampIndex === 'all') {
-            // Use all data points
-            labels = dataForDevice.timestamps;
+            let labels = [];
+            let datasets = [];
 
-            variables.forEach((variable, index) => {
-                datasets.push({
-                    label: variable,
-                    data: dataForDevice[variable],
-                    borderColor: colors[index % colors.length],
-                    backgroundColor: colors[index % colors.length],
-                    tension: 0.1,
-                    fill: false,
-                    showLine: graphType === 'line'
+            // List of sensor variables
+            const variables = ['ax1', 'ay1', 'az1', 'gx1', 'gy1', 'gz1',
+                               'ax2', 'ay2', 'az2', 'gx2', 'gy2', 'gz2',
+                               'ax3', 'ay3', 'az3', 'gx3', 'gy3', 'gz3'];
+
+            const colors = [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)',
+                'rgba(199, 199, 199, 0.6)',
+                'rgba(83, 102, 255, 0.6)',
+                'rgba(83, 255, 126, 0.6)',
+                'rgba(255, 83, 183, 0.6)',
+                'rgba(255, 234, 83, 0.6)',
+                'rgba(83, 255, 234, 0.6)',
+                'rgba(83, 255, 83, 0.6)',
+                'rgba(255, 83, 83, 0.6)',
+                'rgba(83, 83, 255, 0.6)',
+                'rgba(255, 83, 255, 0.6)',
+                'rgba(83, 83, 83, 0.6)',
+                'rgba(255, 255, 83, 0.6)'
+            ];
+
+            if (selectedTimestampIndex === 'all') {
+                // Plot all data against time
+                labels = data['timestamps'];
+
+                variables.forEach((variable, index) => {
+                    datasets.push({
+                        label: variable,
+                        data: data[variable],
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length],
+                        fill: false
+                    });
                 });
-            });
-        } else {
-            // Use data for the selected timestamp
-            const idx = parseInt(timestampIndex);
-            labels = [dataForDevice.timestamps[idx]];
 
-            variables.forEach((variable, index) => {
-                datasets.push({
-                    label: variable,
-                    data: [dataForDevice[variable][idx]],
-                    backgroundColor: colors[index % colors.length],
-                    fill: true
+            } else {
+                // Plot data for a single timestamp
+                const index = parseInt(selectedTimestampIndex);
+                labels = [data['timestamps'][index]];
+
+                variables.forEach((variable, idx) => {
+                    datasets.push({
+                        label: variable,
+                        data: [data[variable][index]],
+                        backgroundColor: colors[idx % colors.length]
+                    });
                 });
-            });
-        }
+            }
 
-        // Clear existing canvas to redraw
-        if (window.userDataChart && typeof window.userDataChart.destroy === 'function') {
-            window.userDataChart.destroy();
-        }
+            if (chart) {
+                chart.destroy();
+            }
 
-        // Show chart area and download buttons
-        document.getElementById('chartArea').style.display = 'block';
-        document.getElementById('downloadButtons').style.display = 'block';
-
-        if (graphType === 'line') {
-            window.userDataChart = new Chart(ctx, {
-                type: 'line',
+            chart = new Chart(ctx, {
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: datasets
                 },
                 options: {
+                    responsive: true,
                     scales: {
                         x: {
+                            display: true,
                             title: {
                                 display: true,
                                 text: 'Time'
                             }
                         },
                         y: {
-                            beginAtZero: true,
+                            display: true,
                             title: {
                                 display: true,
                                 text: 'Sensor Values'
@@ -253,98 +188,15 @@
                             display: true,
                             position: 'bottom'
                         }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    }
-                }
-            });
-        } else if (graphType === 'scatter') {
-            // Suggestion: Scatter Plot Matrix
-            // For simplicity, we'll create a scatter plot of variables against time
-            datasets.forEach(dataset => {
-                dataset.type = 'scatter';
-            });
-
-            window.userDataChart = new Chart(ctx, {
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Time'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Sensor Values'
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            mode: 'nearest',
-                            intersect: true,
-                        },
-                        legend: {
-                            display: true,
-                            position: 'bottom'
-                        }
                     }
                 }
             });
         }
-    }
 
-    // Download Graph
-    document.getElementById('downloadGraph').addEventListener('click', function() {
-        if (window.userDataChart) {
-            const url = window.userDataChart.toBase64Image();
-            const link = document.createElement('a');
-            link.download = 'userDataChart.png';
-            link.href = url;
-            link.click();
-        } else {
-            alert('No graph available to download.');
-        }
-    });
-
-    // Download Data
-    document.getElementById('downloadData').addEventListener('click', function() {
-        if (window.userDataChart) {
-            const deviceId = selectedDeviceId;
-            const timestampIndex = document.getElementById('timestampSelect').value;
-            const dataForDevice = deviceData[deviceId];
-
-            let dataToDownload = {};
-
-            if (timestampIndex === 'all') {
-                dataToDownload = dataForDevice;
-            } else {
-                const idx = parseInt(timestampIndex);
-                dataToDownload.timestamps = [dataForDevice.timestamps[idx]];
-                const variables = Object.keys(dataForDevice).filter(key => key !== 'timestamps');
-                variables.forEach(variable => {
-                    dataToDownload[variable] = [dataForDevice[variable][idx]];
-                });
-            }
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToDownload));
-            const link = document.createElement('a');
-            link.download = 'userData.json';
-            link.href = dataStr;
-            link.click();
-        } else {
-            alert('No data available to download.');
+        // Initial chart rendering
+        if (selectedDeviceId && timestampSelect) {
+            updateChart();
         }
     });
 </script>
-
 {% endblock %}

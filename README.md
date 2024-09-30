@@ -157,6 +157,8 @@ You can definitely use sqlite3 db_name to access your db and use SQL queries as 
 
 ## Method 1: Accessing Database Utilities in Production with Flask Shell
 
+This first method allows you to interface in your production environment with Flask Shell
+
 In production, use Flask Shell or SQLAlchemy with the connection string from your environment variables (usually DATABASE_URL for Heroku).
 
 ### 1. **Connect to the Postgres Database via Heroku**
@@ -165,6 +167,9 @@ heroku login
 ```
 
 ### 2. Set FLASK_APP in Heroku Config Vars **this method works with Landmetrics-Pro**:
+
+If you make any database changes, you may need to go through heroku bash and do a flask db migrate
+
 ```bash
 heroku config:set FLASK_APP=main:app --app landmetrics-pro
 ```
@@ -203,7 +208,7 @@ heroku login
 heroku run bash --app your-app-name # landmetrics-pro for us
 ```
 
-# Two ways to Access production-database:
+# API Connections CLI:
 
 ## Development/Local SQLITE3 DB
 1. switch to WSL
@@ -215,7 +220,7 @@ curl -X POST http://172.23.112.1:5000/api/data -H "Content-Type: application/jso
 ```
 ## Now, how to do it in production Heroku Postgres DB
 ```bash
-curl -X POST http://your-server-address/api/data \
+curl -X POST https://landmetrics-pro-94d7ef7fc253.herokuapp.com/api/data \
      -H "Content-Type: application/json" \
      -d @data.json
 ```
