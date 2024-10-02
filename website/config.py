@@ -11,6 +11,7 @@ class Config:
 
 
 class DevelopmentConfig(Config):
+    print(f'Entering Landmetrics-Pro development configuration')
     DEBUG = True
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
@@ -18,15 +19,21 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config): # tag: set up ENV variables in Heroku GUI or in Procfile
+    print(f'Entering Landmetrics-Pro production configuration')
     DEBUG = False
-    DATABASE_URL = os.environ['DATABASE_URL']
-    # Fix for SQLAlchemy error with Heroku Postgres
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL
-    # Add any other production-specific configurations
+    if os.getenv('DATABASE_URL'):
 
-    uri = os.getenv("DATABASE_URL")  # or other relevant config var
-    if os.getenv('FLASK_ENV ') == 'production':
-        print('====Production mode environment variable detected=====')
-        conn = psycopg2.connect(uri, sslmode='require')
+        DATABASE_URL = os.environ['DATABASE_URL']
+        # Fix for SQLAlchemy error with Heroku Postgres
+        if DATABASE_URL.startswith("postgres://"):
+            DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+        # Add any other production-specific configurations
+
+        uri = os.getenv("DATABASE_URL")  # or other relevant config var
+        if os.getenv('FLASK_ENV ') == 'production':
+            print('====Production mode environment variable detected=====')
+            conn = psycopg2.connect(uri, sslmode='require')
+    
+    else:
+        print(f'No Production-Level DATABASE_URL environment variable found in {os.getenv("FLASK_ENV")} mode')

@@ -190,7 +190,7 @@ You can do this from your local VSCode IDE -> you do need to be in WSL for a win
 sudo apt-get update
 sudo apt-get install postgresql postgresql-contrib
 ```
-### 2. Connect to Postgres DB in your bash terminal:
+### Connect to Postgres DB in your bash terminal:
 ```bash
 psql postgres://user:pass@hostname:5432/dbname # your DATABASE_URL
 ```
