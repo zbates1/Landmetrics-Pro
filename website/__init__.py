@@ -13,16 +13,28 @@ from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_migrate import Migrate
+from sqlalchemy import MetaData # needed to make migrations work
 from werkzeug.security import generate_password_hash
 from .config import Config  # Base configuration class
 
+
+# I am going to set some naming conventions to get passed this annoying naming convention error:
+convention = {
+"ix": 'ix_%(column_0_label)s',
+"uq": "uq_%(table_name)s_%(column_0_name)s",
+"ck": "ck_%(table_name)s_%(constraint_name)s",
+"fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+"pk": "pk_%(table_name)s"
+}
+
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(metadata=metadata)
+
 # Initialize extensions
-db = SQLAlchemy()
+# db = SQLAlchemy()
 csrf = CSRFProtect()
 login_manager = LoginManager()
 admin = Admin()
-migrate = Migrate()
-
 
 def create_app(config_class):
     """
@@ -69,11 +81,13 @@ def initialize_extensions(app):
     Args:
         app (Flask): The Flask app instance.
     """
+    
     db.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
     admin.init_app(app)
-    migrate.init_app(app, db)
+    migrate = Migrate(app,db,render_as_batch=True)
+
 
 def register_blueprints(app):
     """

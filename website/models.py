@@ -36,24 +36,24 @@ class DeviceData(db.Model):
         db.ForeignKey('device.id', name='fk_device_data_device'), 
         nullable=False
     )
-    timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
+    request_timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
     session_id = db.Column(db.Integer, nullable=True, unique=True)
     time = db.Column(db.Float, nullable=False)
 
     # Accelerometer and orientation data for two sets of readings
-    ax1 = db.Column(db.Float, nullable=False)
-    ay1 = db.Column(db.Float, nullable=False)
-    az1 = db.Column(db.Float, nullable=False)
-    ox1 = db.Column(db.Float, nullable=False)
-    oy1 = db.Column(db.Float, nullable=False)
-    oz1 = db.Column(db.Float, nullable=False)
+    ax1 = db.Column(db.Float, nullable=True)
+    ay1 = db.Column(db.Float, nullable=True)
+    az1 = db.Column(db.Float, nullable=True)
+    ox1 = db.Column(db.Float, nullable=True)
+    oy1 = db.Column(db.Float, nullable=True)
+    oz1 = db.Column(db.Float, nullable=True)
 
-    ax2 = db.Column(db.Float, nullable=False)
-    ay2 = db.Column(db.Float, nullable=False)
-    az2 = db.Column(db.Float, nullable=False)
-    ox2 = db.Column(db.Float, nullable=False)
-    oy2 = db.Column(db.Float, nullable=False)
-    oz2 = db.Column(db.Float, nullable=False)
+    ax2 = db.Column(db.Float, nullable=True)
+    ay2 = db.Column(db.Float, nullable=True)
+    az2 = db.Column(db.Float, nullable=True)
+    ox2 = db.Column(db.Float, nullable=True)
+    oy2 = db.Column(db.Float, nullable=True)
+    oz2 = db.Column(db.Float, nullable=True)
 
     __table_args__ = (
         # UniqueConstraint('session_id', name='uq_device_data_session_id'),
