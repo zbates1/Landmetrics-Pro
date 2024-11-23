@@ -30,71 +30,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Running the Application with Docker and Docker Compose
-
-This project supports both Docker and Docker Compose for easy setup and deployment. Below are the instructions on how to utilize these tools in development and production environments.
-
 ### Prerequisites
 
 Before you begin, ensure you have both Docker and Docker Compose installed on your machine. These tools are used to create containers and manage multi-container applications.
-
-### Docker
-
-You can build and run the application using Docker. Here are the basic commands:
-
-1. **Building the Docker Image**
-
-   Build the Docker image using the following command:
-
-```bash
-   docker build -t my-flask-app .
-```
-
-   This command builds a Docker image named my-flask-app based on the instructions in your Dockerfile.
-
-2. **Running the Container**
-
-   Run your application by starting a container from the image:
-
-```bash
-   docker run -p 5000:5000 --name my-running-app my-flask-app
-```
-
-   This command runs the container and maps port 5000 of the container to port 5000 on your host, allowing you to access the application via http://localhost:5000.
-
-### Docker Compose
-
-Docker Compose allows you to manage the application with its services defined in the docker-compose.yml file.
-
-**Development Environment**
-To start the development environment, use the following command:
-
-```bash
-docker-compose up app
-```
-
-This will start the application in development mode, with live reloads and debugging enabled.
-
-**Production Environment**
-
-To deploy the application in a production environment, use:
-
-```bash
-docker-compose up app-prod
-```
-
-This will start the application using Gunicorn, optimized for production. Note that this setup is still in the production testing phase and may require further adjustments before a full production deployment.
-
-**Stopping and Removing Containers**
-
-To stop the running containers and remove them, you can use the following Docker Compose command:
-
-```bash
-docker-compose down
-```
-
-This command stops all the running services defined in your docker-compose.yml file and removes the containers, networks, and volumes created by them.
-
 
 ## 🖥 Viewing The App
 
@@ -138,20 +76,6 @@ add_device(name="Knee Tracker", device_type="Physical Therapy Device", serial_nu
 from website.db_utils import add_device_data
 add_device_data(serial_number="SN123456", value1=50.5, value2=30.7)
 ```
-
-## Local Development Example CLI Commands 
-For easier interaction without entering the Flask shell, you can use CLI commands. Here are a few examples:
-
-### List all users:
-```bash
-python db_utils.py --list-users
-```
-### List devices for a user with user_id=1:
-```bash
-python db_utils.py --list-devices-for-user 1
-```
-
-You can definitely use sqlite3 db_name to access your db and use SQL queries as an alternative!
 
 ## Two ways to Access production-database:
 
