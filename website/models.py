@@ -47,6 +47,7 @@ class DeviceData(db.Model):
     ox1 = db.Column(db.Float, nullable=True)
     oy1 = db.Column(db.Float, nullable=True)
     oz1 = db.Column(db.Float, nullable=True)
+    ow1 = db.Column(db.Float, nullable=True)
 
     ax2 = db.Column(db.Float, nullable=True)
     ay2 = db.Column(db.Float, nullable=True)
@@ -54,6 +55,7 @@ class DeviceData(db.Model):
     ox2 = db.Column(db.Float, nullable=True)
     oy2 = db.Column(db.Float, nullable=True)
     oz2 = db.Column(db.Float, nullable=True)
+    ow2 = db.Column(db.Float, nullable=True)
 
     __table_args__ = (
         # UniqueConstraint('session_id', name='uq_device_data_session_id'),
