@@ -1,10 +1,19 @@
 {% extends "base.html" %}
+<input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
 
-{% block title %}User Data Visualization{% endblock %}
+
+{% block title %}Patient & Device Data Visualization{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <h1 class="text-center mb-5">User Data Visualization</h1>
+<div class="container my-5" id="dashboard" style="display: none;">
+    <h1 class="text-center mb-5">Patient & Device Data Dashboard</h1>
+    <h3 class="text-center mb-5">Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}</h3>
+
+    <!-- Patient Actions -->
+    <div class="text-center mb-5">
+        <button class="btn btn-primary" id="viewTestsBtn">View Past Health Tests</button>
+        <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
+    </div>
 
     <!-- Device Selection -->
     <div class="row mb-4">
@@ -39,7 +48,7 @@
     {% endif %}
 
     <!-- Chart Type Selection -->
-    {% if device_data[selected_device_id] %}
+    {% if selected_device_id and device_data[selected_device_id] %}
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
@@ -48,17 +57,63 @@
                 <!-- Additional chart types can be added here -->
             </select>
         </div>
-    {% endif %}
     </div>
+    {% endif %}
 
     <!-- Chart Area -->
-    {% if device_data[selected_device_id] %}
+    {% if selected_device_id and device_data[selected_device_id] %}
     <div class="row">
         <div class="col-md-12">
             <canvas id="dataChart" style="max-height: 500px;"></canvas>
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- Patient Selection Modal -->
+<div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="patientModalLabel">Select or Add a Patient</h1>
+      </div>
+      <div class="modal-body">
+        <div id="patientSelection" style="display: block;">
+          <label for="patientSelect" class="form-label">Select a Patient</label>
+          <select id="patientSelect" class="form-select mb-3">
+              <option value="" disabled selected>Select a Patient</option>
+              {% for patient in patients %}
+                  <option value="{{ patient.id }}">{{ patient.name }}</option>
+              {% endfor %}
+          </select>
+          <button class="btn btn-secondary w-100 mb-3" id="addPatientToggleBtn">Add New Patient</button>
+          <button class="btn btn-primary w-100" id="selectPatientBtn">Select Patient</button>
+        </div>
+
+        <div id="addPatientForm" style="display: none;">
+          <label for="newPatientName" class="form-label">New Patient Name</label>
+          <input type="text" id="newPatientName" class="form-control mb-3" placeholder="Enter patient name">
+          <!-- Add more fields like DOB, gender, injury if needed -->
+          <label for="newPatientDOB" class="form-label">Date of Birth</label>
+          <input type="date" id="newPatientDOB" class="form-control mb-3">
+
+          <label for="newPatientGender" class="form-label">Gender</label>
+          <select id="newPatientGender" class="form-select mb-3">
+              <option value="" disabled selected>Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+          </select>
+
+          <label for="newPatientInjury" class="form-label">Injury</label>
+          <input type="text" id="newPatientInjury" class="form-control mb-3" placeholder="Describe injury (optional)">
+
+          <button class="btn btn-secondary w-100 mb-3" id="cancelAddPatientBtn">Cancel</button>
+          <button class="btn btn-success w-100" id="savePatientBtn">Save Patient</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Include Chart.js -->
@@ -70,8 +125,31 @@
     const selectedDeviceId = {{ selected_device_id | tojson }};
     const selectedRequestTimestamp = {{ selected_request_timestamp | tojson }};
     const requestTimestamps = {{ request_timestamps | tojson }};
+    const selectedPatientId = {{ selected_patient_id | tojson }}; // passed in from the backend
+    const patientsExist = {{ (patients|length > 0) | tojson }}; // Check if patients list is not empty
 
     document.addEventListener('DOMContentLoaded', function() {
+        const dashboard = document.getElementById('dashboard');
+        const patientModal = new bootstrap.Modal(document.getElementById('patientModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.getElementById('csrf_token');
+    console.log(csrfToken); // Check if null or not
+    // If null here, that means element not present in HTML
+    });
+
+
+        const addPatientToggleBtn = document.getElementById('addPatientToggleBtn');
+        const patientSelection = document.getElementById('patientSelection');
+        const addPatientForm = document.getElementById('addPatientForm');
+        const cancelAddPatientBtn = document.getElementById('cancelAddPatientBtn');
+        const selectPatientBtn = document.getElementById('selectPatientBtn');
+        const patientSelect = document.getElementById('patientSelect');
+        const savePatientBtn = document.getElementById('savePatientBtn');
+
         const deviceSelect = document.getElementById('deviceSelect');
         const requestTimestampSelect = document.getElementById('requestTimestampSelect');
         const chartTypeSelect = document.getElementById('chartTypeSelect');
@@ -79,11 +157,82 @@
 
         let chart;
 
+        // Show modal if no patient selected
+        if (!selectedPatientId) {
+            // If no patients exist, show add patient form directly
+            if (!patientsExist) {
+                patientSelection.style.display = 'none';
+                addPatientForm.style.display = 'block';
+            }
+            patientModal.show();
+        } else {
+            // If patient is selected, show dashboard
+            dashboard.style.display = 'block';
+        }
+
+        // Toggle between select existing patient and add new patient
+        addPatientToggleBtn.addEventListener('click', function() {
+            patientSelection.style.display = 'none';
+            addPatientForm.style.display = 'block';
+        });
+
+        cancelAddPatientBtn.addEventListener('click', function() {
+            addPatientForm.style.display = 'none';
+            patientSelection.style.display = 'block';
+        });
+
+        selectPatientBtn.addEventListener('click', function() {
+            const selectedId = patientSelect.value;
+            if (selectedId) {
+                // Redirect or AJAX call to set patient as selected
+                window.location.href = "{{ url_for('data_view.user_data') }}?patient_id=" + selectedId;
+            }
+        });
+
+        savePatientBtn.addEventListener('click', function() {
+            const name = document.getElementById('newPatientName').value;
+            const dob = document.getElementById('newPatientDOB').value;
+            const gender = document.getElementById('newPatientGender').value;
+            const injury = document.getElementById('newPatientInjury').value;
+            const csrfToken = document.getElementById('csrf_token').value;
+
+            if (name && dob && gender) {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('date_of_birth', dob);
+                formData.append('gender', gender);
+                formData.append('injury', injury);
+                formData.append('csrf_token', csrfToken); // Include CSRF token
+
+                fetch("{{ url_for('data_view.add_patient') }}", {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = "{{ url_for('data_view.user_data') }}?patient_id=" + data.patient_id;
+                    } else {
+                        alert("Error adding patient: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error adding patient.");
+                });
+            } else {
+                alert("Please fill out all required fields (Name, DOB, Gender).");
+            }
+        });
+
         deviceSelect.addEventListener('change', function() {
             const deviceId = deviceSelect.value;
             if (deviceId) {
-                // Redirect to the page with the selected device ID
-                window.location.href = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
+                let url = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
+                if (selectedPatientId) {
+                    url += "&patient_id=" + selectedPatientId;
+                }
+                window.location.href = url;
             }
         });
 
@@ -95,7 +244,9 @@
                 if (requestTimestamp) {
                     url += "&request_timestamp=" + encodeURIComponent(requestTimestamp);
                 }
-                // Redirect to the URL with selected request_timestamp
+                if (selectedPatientId) {
+                    url += "&patient_id=" + selectedPatientId;
+                }
                 window.location.href = url;
             });
         }
@@ -113,10 +264,11 @@
             let labels = data['timestamps'];
             let datasets = [];
 
-            // List of sensor variables
-            const variables = ['ax1', 'ay1', 'az1', 'gx1', 'gy1', 'gz1',
-                               'ax2', 'ay2', 'az2', 'gx2', 'gy2', 'gz2',
-                               'ax3', 'ay3', 'az3', 'gx3', 'gy3', 'gz3'];
+            // Updated variables list to reflect current schema
+            const variables = [
+            'ax1', 'ay1', 'az1', 'ox1', 'oy1', 'oz1', 'ow1',
+            'ax2', 'ay2', 'az2', 'ox2', 'oy2', 'oz2', 'ow2'
+            ];
 
             const colors = [
                 'rgba(255, 99, 132, 0.6)',
@@ -140,13 +292,15 @@
             ];
 
             variables.forEach((variable, index) => {
-                datasets.push({
-                    label: variable,
-                    data: data[variable],
-                    borderColor: colors[index % colors.length],
-                    backgroundColor: colors[index % colors.length],
-                    fill: false
-                });
+                if (data[variable]) {
+                    datasets.push({
+                        label: variable,
+                        data: data[variable],
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length],
+                        fill: false
+                    });
+                }
             });
 
             if (chart) {
@@ -191,10 +345,30 @@
             });
         }
 
-        // Initial chart rendering
-        if (selectedDeviceId && deviceData[selectedDeviceId] && ctx) {
+        // Initial chart rendering if device is selected
+        if (selectedDeviceId && deviceData[selectedDeviceId] && ctx && selectedPatientId) {
             updateChart();
         }
+
+        // Once patient selected or added, hide modal and show dashboard
+        if (selectedPatientId) {
+            // Hide modal if open
+            if (patientModal) {
+                patientModal.hide();
+            }
+            dashboard.style.display = 'block';
+        }
+
+        // View Past Tests / New Test buttons (placeholders)
+        document.getElementById('viewTestsBtn').addEventListener('click', function() {
+            // Implement logic to view tests for the selected patient
+            window.location.href = "{{ url_for('data_view.view_tests') }}?patient_id=" + selectedPatientId;
+        });
+
+        document.getElementById('newTestBtn').addEventListener('click', function() {
+            // Implement logic to initiate a new test for the selected patient
+            window.location.href = "{{ url_for('data_view.new_test') }}?patient_id=" + selectedPatientId;
+        });
     });
 </script>
 {% endblock %}
