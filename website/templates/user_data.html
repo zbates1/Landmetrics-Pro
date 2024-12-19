@@ -1,6 +1,4 @@
 {% extends "base.html" %}
-<input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
-
 
 {% block title %}Patient & Device Data Visualization{% endblock %}
 
@@ -8,6 +6,12 @@
 <div class="container my-5" id="dashboard" style="display: none;">
     <h1 class="text-center mb-5">Patient & Device Data Dashboard</h1>
     <h3 class="text-center mb-5">Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}</h3>
+
+    <script>
+        var csrfToken = "{{ csrf_token }}";
+    </script>
+    
+    <input type="hidden" id="csrf_token" value="{{ csrf_token() or '' }}">    
 
     <!-- Patient Actions -->
     <div class="text-center mb-5">

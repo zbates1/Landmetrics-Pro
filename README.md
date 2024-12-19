@@ -150,15 +150,6 @@ curl -X POST https://landmetrics-pro-94d7ef7fc253.herokuapp.com/api/data \
      -d @data.json
 ```
 
-
-## 🔥 Urgent To-Do List
-
-- [ ] 🤖 **Prototype Integration**: Arduino/Raspberry Pi → SQL → Web display.
-- [ ] 📊 **Finalize Data Analysis View**: Enhance the interface for better user experience.
-- [ ] 🔒 **Environment Variables**: Establish secure deployment practices. (see 'user_data.py' line 14 to see how best practices for getting env varaibles in your py scripts)
-
----
-
 ## 🌟 Future Developments
 
 Explore and implement the following to enhance functionality:

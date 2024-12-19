@@ -4,7 +4,7 @@ incorporating patient selection and updated schema changes.
 """
 
 import logging
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
@@ -213,7 +213,7 @@ def user_data():
             patients=patients,
             selected_patient_id=selected_patient_id if selected_patient_id is not None else None,
             current_patient_name=current_patient_name,
-            csrf_token=generate_csrf() # THIS MAY NOT BE FUNCTIONAL FOR THE ADD PATIENT BUTTON, NOT SURE SINCE ADD_PATIENT ENDPOINT ONLY USES JSONIFY RETURNS
+            csrf=generate_csrf() # THIS MAY NOT BE FUNCTIONAL FOR THE ADD PATIENT BUTTON, NOT SURE SINCE ADD_PATIENT ENDPOINT ONLY USES JSONIFY RETURNS
         )
 
     except SQLAlchemyError as e:
