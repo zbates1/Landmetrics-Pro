@@ -46,13 +46,22 @@ def home():
 
 # Taking data from the Arduino ESP32
 @views.route('/api/data', methods=['POST'])
-@csrf.exempt  # only if you're exempting this route from CSRF checks
+@csrf.exempt  # Only if intentionally exempt from CSRF checks
 def receive_data():
     """
-    Receive JSON data for a device, create DeviceData entries for each data point.
+    Receive JSON data for a device and a patient,
+    create DeviceData entries for each data point.
+    
+    Now *requires* a valid 'test_name' chosen from:
+      - "Depth Jump Test"
+      - "3 Jump Test"
+      - "Vertical Jump Test"
+
     Expected JSON structure (example):
     {
-      "device_name": "ABCD1234",     # The device's serial_number
+      "device_name": "ABCD1234",  # The device's serial_number
+      "patient_id": 123,          # ID of the patient in the DB
+      "test_name": "Depth Jump Test",
       "timestamps": [float, float, ...],
       "ax1": [float, float, ...],
       "ay1": [...],
@@ -76,24 +85,54 @@ def receive_data():
         logger.error("No JSON data received")
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
 
-    device_serial_number = data.get('device_name')  # Serial number of the device
-    timestamps = data.get('timestamps')            # Array of 'time' values
+    # Required fields
+    device_serial_number = data.get('device_name')
+    patient_id_val = data.get('patient_id')
+    test_name_val = data.get('test_name')
+    timestamps = data.get('timestamps')
 
-    # Create a request_timestamp for each data point, but use the current time and the same value for each data point in the same API call
-    request_timestamps = [datetime.utcnow() for _ in range(len(timestamps or []))]
+    # Validate 'device_name' or 'timestamps'
+    if not device_serial_number or not timestamps:
+        logger.error("Missing 'device_name' or 'timestamps' in the JSON")
+        return jsonify({"status": "error", "message": "Missing 'device_name' or 'timestamps'"}), 400
 
-    # Define the sensor fields matching your new schema (acceleration + orientation)
+    # Validate 'patient_id'
+    if not patient_id_val:
+        logger.error("Missing 'patient_id' in the JSON")
+        return jsonify({"status": "error", "message": "Missing 'patient_id'"}), 400
+
+    # Validate 'test_name'
+    allowed_test_names = [
+        "Depth Jump Test",
+        "3 Jump Test",
+        "Vertical Jump Test"
+    ]
+    if not test_name_val:
+        logger.error("Missing 'test_name' in the JSON")
+        return jsonify({"status": "error", "message": "Missing 'test_name'"}), 400
+    if test_name_val not in allowed_test_names:
+        logger.error(f"Invalid 'test_name' provided: {test_name_val}")
+        return jsonify({"status": "error", "message": f"Invalid 'test_name'. Must be one of: {allowed_test_names}"}), 400
+
+    # Retrieve Device and Patient from the DB
+    device = Device.query.filter_by(serial_number=device_serial_number).first()
+    if not device:
+        logger.error(f"Device with serial_number {device_serial_number} not found.")
+        return jsonify({"status": "error", "message": "Device not found"}), 404
+
+    from .models import Patient  # Ensure Patient is imported if in a different module
+    patient = Patient.query.filter_by(id=patient_id_val).first()
+    if not patient:
+        logger.error(f"Patient with id {patient_id_val} not found.")
+        return jsonify({"status": "error", "message": "Patient not found"}), 404
+
+    # Prepare sensor fields
     sensor_variables = [
         'ax1', 'ay1', 'az1', 'ox1', 'oy1', 'oz1', 'ow1',
         'ax2', 'ay2', 'az2', 'ox2', 'oy2', 'oz2', 'ow2'
     ]
 
-    # Check that device_name and timestamps exist
-    if not device_serial_number or not timestamps:
-        logger.error("Missing device_name or timestamps in the received JSON")
-        return jsonify({"status": "error", "message": "Missing device_name or timestamps"}), 400
-
-    # Gather all sensor arrays from the JSON payload
+    # Gather sensor arrays
     sensor_data = {}
     for var in sensor_variables:
         sensor_data[var] = data.get(var)
@@ -101,27 +140,22 @@ def receive_data():
             logger.error(f"Missing data for {var}")
             return jsonify({"status": "error", "message": f"Missing data for {var}"}), 400
 
-    # Check all arrays have the same length
+    # Check all arrays match length of 'timestamps'
     data_length = len(timestamps)
     for var in sensor_variables:
         if len(sensor_data[var]) != data_length:
             logger.error("Mismatch in lengths of data arrays")
             return jsonify({"status": "error", "message": "Mismatch in lengths of data arrays"}), 400
 
-    # Find the device in the database via the serial_number
-    device = Device.query.filter_by(serial_number=device_serial_number).first()
-    if not device:
-        logger.error(f"Device with serial_number {device_serial_number} not found in the database")
-        return jsonify({"status": "error", "message": "Device not found"}), 404
+    # Create a request_timestamp for each data point
+    request_timestamps = [datetime.utcnow() for _ in range(data_length)]
 
-    # Prepare the DeviceData objects
     new_data_entries = []
     for i in range(data_length):
         new_entry = DeviceData(
             device_id=device.id,
-            # The device might not have a 'patient_id' here, so leave it None or handle logic as needed
-            patient_id=None,
-            # A single request_timestamp used repeatedly, or adapt as needed
+            patient_id=patient.id,
+            test_name=test_name_val,            # set the test_name
             request_timestamp=request_timestamps[i],
             time=timestamps[i],
 
@@ -141,21 +175,24 @@ def receive_data():
             ox2=sensor_data['ox2'][i],
             oy2=sensor_data['oy2'][i],
             oz2=sensor_data['oz2'][i],
-            ow2=sensor_data['ow2'][i],
-
-            # If you wanted to pass something like test_name from the JSON, you could do:
-            # test_name=data.get('test_name') or something
+            ow2=sensor_data['ow2'][i]
         )
         new_data_entries.append(new_entry)
 
-    # Insert into DB
     try:
         db.session.bulk_save_objects(new_data_entries)
         db.session.commit()
-        logger.info(f"Saved {len(new_data_entries)} data points for Device with serial_number {device_serial_number}")
+        logger.info(f"Saved {len(new_data_entries)} data points for Device({device_serial_number}), "
+                    f"Patient({patient_id_val}), Test({test_name_val}).")
     except Exception as e:
         db.session.rollback()
         logger.error(f"Database error when saving data: {str(e)}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
 
-    return jsonify({"status": "success", "message": f"{len(new_data_entries)} data points received and saved"}), 200
+    return jsonify({
+        "status": "success",
+        "message": f"{len(new_data_entries)} data points received "
+                   f"and saved for device {device_serial_number}, "
+                   f"patient {patient_id_val}, "
+                   f"test_name '{test_name_val}'."
+    }), 200

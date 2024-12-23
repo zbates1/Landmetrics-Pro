@@ -1,5 +1,5 @@
 # db_utils.py
-from .models import User, Device, DeviceData
+from .models import User, Device, DeviceData, Patient
 from werkzeug.security import generate_password_hash
 from . import db
 from sqlalchemy import func
@@ -25,6 +25,8 @@ def add_device(name, device_type, serial_number, user_id):
     else:
         print(f'User with id {user_id} does not exist.')
 
+
+# tag: Outdated -> needs patient_id to be included
 def add_device_data(
     serial_number,
     time,
@@ -99,7 +101,6 @@ def list_all_devices():
 
 
 # Updated list_device_data function
-# Updated list_device_data function
 def list_device_data(serial_number):
     device = Device.query.filter_by(serial_number=serial_number).first()
     if device:
@@ -126,6 +127,50 @@ def find_user_by_email(email):
     else:
         print(f"No user found with email {email}.")
 
+def find_patient_by_id(patient_id):
+    """
+    Finds a patient by their ID and prints the patient's name and associated provider.
+    """
+    patient = Patient.query.get(patient_id)
+    if patient:
+        provider_email = patient.provider.email if patient.provider else "No provider"
+        print(f"Patient found: {patient.name} (ID: {patient.id}, Provider: {provider_email})")
+    else:
+        print(f"No patient found with ID {patient_id}.")
+
+def find_patient_by_name(name):
+    """
+    Finds patients matching the provided name (case-insensitive).
+    Prints out their ID, name, and associated provider.
+    """
+    # Case-insensitive search
+    patients = Patient.query.filter(Patient.name.ilike(f"%{name}%")).all()
+    if patients:
+        print(f"Patients matching '{name}':")
+        for p in patients:
+            provider_email = p.provider.email if p.provider else "No provider"
+            print(f" - ID: {p.id}, Name: {p.name}, Provider: {provider_email}")
+    else:
+        print(f"No patients found with name containing '{name}'.")
+
+def list_all_patients():
+    """
+    Lists all patients in the database with their ID, name, and provider's email.
+    """
+    from .models import Patient
+    patients = Patient.query.all()
+    if patients:
+        print(f"{'Patient ID':<10} {'Patient Name':<25} {'DOB':<12} {'Gender':<10} {'Provider Email':<30}")
+        print("=" * 90)
+        for p in patients:
+            provider_email = p.provider.email if p.provider else "No provider"
+            dob_str = p.date_of_birth.isoformat() if p.date_of_birth else "N/A"
+            print(f"{p.id:<10} {p.name:<25} {dob_str:<12} {p.gender:<10} {provider_email:<30}")
+    else:
+        print("No patients found in the database.")
+
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="CLI Tools for Interacting with the Database")
@@ -135,6 +180,10 @@ if __name__ == '__main__':
     parser.add_argument('--list-all-devices', action='store_true', help="List all devices")
     parser.add_argument('--list-device-data', type=str, help="List data points for a specific device by serial number")
     parser.add_argument('--find-user-by-email', type=str, help="Find a user by their email")
+    parser.add_argument('--find-patient-by-id', type=int, help="Find a patient by their ID.")
+    parser.add_argument('--find-patient-by-name', type=str, help="Find a patient by name.")
+    parser.add_argument('--list-all-patients', action='store_true', help="List all patients")
+
     
     args = parser.parse_args()
     
@@ -148,6 +197,13 @@ if __name__ == '__main__':
         list_device_data(args.list_device_data)
     elif args.find_user_by_email:
         find_user_by_email(args.find_user_by_email)
+    elif args.find_patient_by_id:
+        find_patient_by_id(args.find_patient_by_id)
+    elif args.find_patient_by_name:
+        find_patient_by_name(args.find_patient_by_name)
+    elif args.list_all_patients:
+        list_all_patients()
+
 
 
 
@@ -166,7 +222,7 @@ if __name__ == '__main__':
 # Example command to add a device for a user with user_id=1 -> NOTE: for this to work, you will need to utilize the list_users() function to find the user_id
 # add_device(name="Knee Tracker", device_type="Physical Therapy Device", serial_number="SN123456", user_id=1)
 
-# 3.
+# 3. tag: Outdated -> Needs to be updated for big db changes
 # from website.db_utils import add_device_data
 # Example command to add data for a device with serial number 'SN123456'
 # add_device_data(
@@ -176,6 +232,16 @@ if __name__ == '__main__':
 #     ax2=0.03, ay2=0.04, az2=1.02, gx2=1.2, gy2=-0.3, gz2=0.1,
 #     ax3=0.05, ay3=0.06, az3=1.05, gx3=1.0, gy3=-0.2, gz3=0.2
 # )
+
+# 4.
+# from website.db_utils import find_patient_by_id
+# find_patient_by_id(5)  # Suppose 5 is a patient ID
+
+# 5.
+# from website.db_utils import find_patient_by_name
+# find_patient_by_name("John")  # Lists all patients whose name includes "John"
+
+
 
 
 
