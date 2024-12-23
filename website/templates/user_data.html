@@ -74,51 +74,8 @@
     {% endif %}
 </div>
 
-<!-- Patient Selection Modal -->
-<div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="patientModalLabel">Select or Add a Patient</h1>
-      </div>
-      <div class="modal-body">
-        <div id="patientSelection" style="display: block;">
-          <label for="patientSelect" class="form-label">Select a Patient</label>
-          <select id="patientSelect" class="form-select mb-3">
-              <option value="" disabled selected>Select a Patient</option>
-              {% for patient in patients %}
-                  <option value="{{ patient.id }}">{{ patient.name }}</option>
-              {% endfor %}
-          </select>
-          <button class="btn btn-secondary w-100 mb-3" id="addPatientToggleBtn">Add New Patient</button>
-          <button class="btn btn-primary w-100" id="selectPatientBtn">Select Patient</button>
-        </div>
-
-        <div id="addPatientForm" style="display: none;">
-          <label for="newPatientName" class="form-label">New Patient Name</label>
-          <input type="text" id="newPatientName" class="form-control mb-3" placeholder="Enter patient name">
-          <!-- Add more fields like DOB, gender, injury if needed -->
-          <label for="newPatientDOB" class="form-label">Date of Birth</label>
-          <input type="date" id="newPatientDOB" class="form-control mb-3">
-
-          <label for="newPatientGender" class="form-label">Gender</label>
-          <select id="newPatientGender" class="form-select mb-3">
-              <option value="" disabled selected>Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-          </select>
-
-          <label for="newPatientInjury" class="form-label">Injury</label>
-          <input type="text" id="newPatientInjury" class="form-control mb-3" placeholder="Describe injury (optional)">
-
-          <button class="btn btn-secondary w-100 mb-3" id="cancelAddPatientBtn">Cancel</button>
-          <button class="btn btn-success w-100" id="savePatientBtn">Save Patient</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+{% include "_patient_selection_modal.html" %}
+{% include "_new_test_modal.html" %}
 
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -369,9 +326,21 @@
             window.location.href = "{{ url_for('data_view.view_tests') }}?patient_id=" + selectedPatientId;
         });
 
+        const newTestModal = new bootstrap.Modal(document.getElementById('newTestModal'));
+        const startTestBtn = document.getElementById('startTestBtn');
+
         document.getElementById('newTestBtn').addEventListener('click', function() {
-            // Implement logic to initiate a new test for the selected patient
-            window.location.href = "{{ url_for('data_view.new_test') }}?patient_id=" + selectedPatientId;
+            newTestModal.show();
+        });
+
+        startTestBtn.addEventListener('click', function() {
+            const testName = document.getElementById('testName').value;
+            const testDescription = document.getElementById('testDescription').value;
+            // Here, you'd either send an AJAX request or navigate to a route to start the test.
+            console.log("Starting new test:", testName, testDescription);
+            // For now, just close the modal or show an alert:
+            alert("Test started with name: " + testName);
+            newTestModal.hide();
         });
     });
 </script>

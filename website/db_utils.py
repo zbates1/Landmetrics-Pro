@@ -25,23 +25,42 @@ def add_device(name, device_type, serial_number, user_id):
     else:
         print(f'User with id {user_id} does not exist.')
 
-# Updated add_device_data function
-def add_device_data(serial_number, time, ax1, ay1, az1, gx1, gy1, gz1, ax2, ay2, az2, gx2, gy2, gz2, ax3, ay3, az3, gx3, gy3, gz3):
-    device = Device.query.filter_by(serial_number=serial_number).first()  # Query by serial_number
+def add_device_data(
+    serial_number,
+    time,
+    ax1, ay1, az1, ox1, oy1, oz1, ow1,
+    ax2, ay2, az2, ox2, oy2, oz2, ow2,
+    test_name=None
+):
+    """
+    Add a new DeviceData entry for a specific device identified by 'serial_number'.
+    
+    :param serial_number: The device's unique serial_number in the Device table.
+    :param time: The 'time' value from the sensor data (float).
+    :param ax1, ay1, az1, ox1, oy1, oz1, ow1: First set of sensor readings.
+    :param ax2, ay2, az2, ox2, oy2, oz2, ow2: Second set of sensor readings.
+    :param test_name: Optional test name, e.g. "depth jump".
+    """
+    device = Device.query.filter_by(serial_number=serial_number).first()
     if device:
         new_data = DeviceData(
             device_id=device.id,
-            time=time,  # Time from the Arduino data
-            request_timestamp=datetime.utcnow(),  # Timestamp of when the request was received
-            ax1=ax1, ay1=ay1, az1=az1, gx1=gx1, gy1=gy1, gz1=gz1,
-            ax2=ax2, ay2=ay2, az2=az2, gx2=gx2, gy2=gy2, gz2=gz2,
-            ax3=ax3, ay3=ay3, az3=az3, gx3=gx3, gy3=gy3, gz3=gz3
+            time=time,  
+            request_timestamp=datetime.utcnow(),  # or func.now() if you prefer
+            test_name=test_name,
+            
+            ax1=ax1, ay1=ay1, az1=az1,
+            ox1=ox1, oy1=oy1, oz1=oz1, ow1=ow1,
+            
+            ax2=ax2, ay2=ay2, az2=az2,
+            ox2=ox2, oy2=oy2, oz2=oz2, ow2=ow2
         )
         db.session.add(new_data)
         db.session.commit()
-        print(f'Data for Device {serial_number} added successfully!')
+        print(f"Data for Device {serial_number} added successfully!")
     else:
-        print(f'Device with serial number {serial_number} does not exist.')
+        print(f"Device with serial number {serial_number} does not exist.")
+
 
 def list_users():
     users = User.query.all()

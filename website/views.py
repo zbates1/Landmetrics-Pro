@@ -46,36 +46,54 @@ def home():
 
 # Taking data from the Arduino ESP32
 @views.route('/api/data', methods=['POST'])
-@csrf.exempt
+@csrf.exempt  # only if you're exempting this route from CSRF checks
 def receive_data():
+    """
+    Receive JSON data for a device, create DeviceData entries for each data point.
+    Expected JSON structure (example):
+    {
+      "device_name": "ABCD1234",     # The device's serial_number
+      "timestamps": [float, float, ...],
+      "ax1": [float, float, ...],
+      "ay1": [...],
+      "az1": [...],
+      "ox1": [...],
+      "oy1": [...],
+      "oz1": [...],
+      "ow1": [...],
+      "ax2": [...],
+      "ay2": [...],
+      "az2": [...],
+      "ox2": [...],
+      "oy2": [...],
+      "oz2": [...],
+      "ow2": [...]
+    }
+    (All arrays must be the same length.)
+    """
     data = request.get_json()
-
-    # Check if the JSON payload is received
     if not data:
         logger.error("No JSON data received")
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
 
-    device_serial_number = data.get('device_name')
-    timestamps = data.get('timestamps')
+    device_serial_number = data.get('device_name')  # Serial number of the device
+    timestamps = data.get('timestamps')            # Array of 'time' values
 
-    # Lets create request_timestamps at the beginning of the API request
-    # Create request_timestamps array the length of timestamps, filled with the same randomly generated timestamp
-    request_timestamps = random.randint(0, 1000000000)
-    request_timestamps = [request_timestamps for _ in range(len(timestamps))]
+    # Create a request_timestamp for each data point, but use the current time and the same value for each data point in the same API call
+    request_timestamps = [datetime.utcnow() for _ in range(len(timestamps or []))]
 
-
-    # List of all sensor variables
+    # Define the sensor fields matching your new schema (acceleration + orientation)
     sensor_variables = [
-        'Ax1', 'Ay1', 'Az1', 'Gx1', 'Gy1', 'Gz1',
-        'Ax2', 'Ay2', 'Az2', 'Gx2', 'Gy2', 'Gz2',
-        'Ax3', 'Ay3', 'Az3', 'Gx3', 'Gy3', 'Gz3'
+        'ax1', 'ay1', 'az1', 'ox1', 'oy1', 'oz1', 'ow1',
+        'ax2', 'ay2', 'az2', 'ox2', 'oy2', 'oz2', 'ow2'
     ]
 
-    # Ensure all required data is present
+    # Check that device_name and timestamps exist
     if not device_serial_number or not timestamps:
         logger.error("Missing device_name or timestamps in the received JSON")
         return jsonify({"status": "error", "message": "Missing device_name or timestamps"}), 400
 
+    # Gather all sensor arrays from the JSON payload
     sensor_data = {}
     for var in sensor_variables:
         sensor_data[var] = data.get(var)
@@ -83,39 +101,54 @@ def receive_data():
             logger.error(f"Missing data for {var}")
             return jsonify({"status": "error", "message": f"Missing data for {var}"}), 400
 
-    # Check that all arrays are the same length
+    # Check all arrays have the same length
     data_length = len(timestamps)
-    if any(len(sensor_data[var]) != data_length for var in sensor_variables):
-        logger.error("Mismatch in lengths of data arrays")
-        return jsonify({"status": "error", "message": "Mismatch in lengths of data arrays"}), 400
+    for var in sensor_variables:
+        if len(sensor_data[var]) != data_length:
+            logger.error("Mismatch in lengths of data arrays")
+            return jsonify({"status": "error", "message": "Mismatch in lengths of data arrays"}), 400
 
-    # Find the device in the database
+    # Find the device in the database via the serial_number
     device = Device.query.filter_by(serial_number=device_serial_number).first()
     if not device:
         logger.error(f"Device with serial_number {device_serial_number} not found in the database")
         return jsonify({"status": "error", "message": "Device not found"}), 404
 
-    # Prepare data entries
+    # Prepare the DeviceData objects
     new_data_entries = []
     for i in range(data_length):
-        new_data = DeviceData(
+        new_entry = DeviceData(
             device_id=device.id,
-            time=timestamps[i],
-            # request_timestamp=datetime.utcnow(),
-            # replace request_timestamp with random string, 15 characters
-            # request_timestamp=''.join([str(random.randint(0, 9)) for _ in range(15)]),
-            # Version 2 of implementation, need to create an array of same length as timestamps, with the same value; this method creates a unique value for each
+            # The device might not have a 'patient_id' here, so leave it None or handle logic as needed
+            patient_id=None,
+            # A single request_timestamp used repeatedly, or adapt as needed
             request_timestamp=request_timestamps[i],
-            ax1=sensor_data['Ax1'][i], ay1=sensor_data['Ay1'][i], az1=sensor_data['Az1'][i],
-            gx1=sensor_data['Gx1'][i], gy1=sensor_data['Gy1'][i], gz1=sensor_data['Gz1'][i],
-            ax2=sensor_data['Ax2'][i], ay2=sensor_data['Ay2'][i], az2=sensor_data['Az2'][i],
-            gx2=sensor_data['Gx2'][i], gy2=sensor_data['Gy2'][i], gz2=sensor_data['Gz2'][i],
-            ax3=sensor_data['Ax3'][i], ay3=sensor_data['Ay3'][i], az3=sensor_data['Az3'][i],
-            gx3=sensor_data['Gx3'][i], gy3=sensor_data['Gy3'][i], gz3=sensor_data['Gz3'][i]
-        )
-        new_data_entries.append(new_data)
+            time=timestamps[i],
 
-    # Bulk insert all data entries
+            ax1=sensor_data['ax1'][i],
+            ay1=sensor_data['ay1'][i],
+            az1=sensor_data['az1'][i],
+
+            ox1=sensor_data['ox1'][i],
+            oy1=sensor_data['oy1'][i],
+            oz1=sensor_data['oz1'][i],
+            ow1=sensor_data['ow1'][i],
+
+            ax2=sensor_data['ax2'][i],
+            ay2=sensor_data['ay2'][i],
+            az2=sensor_data['az2'][i],
+
+            ox2=sensor_data['ox2'][i],
+            oy2=sensor_data['oy2'][i],
+            oz2=sensor_data['oz2'][i],
+            ow2=sensor_data['ow2'][i],
+
+            # If you wanted to pass something like test_name from the JSON, you could do:
+            # test_name=data.get('test_name') or something
+        )
+        new_data_entries.append(new_entry)
+
+    # Insert into DB
     try:
         db.session.bulk_save_objects(new_data_entries)
         db.session.commit()

@@ -1,0 +1,28 @@
+<!-- New Test Modal -->
+<div class="modal fade" id="newTestModal" tabindex="-1" aria-labelledby="newTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="newTestModalLabel">Initiate a New Test</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Your test setup form fields go here -->
+          <div class="mb-3">
+            <label for="testName" class="form-label">Test Name</label>
+            <input type="text" id="testName" class="form-control" placeholder="Enter test name">
+          </div>
+          <div class="mb-3">
+            <label for="testDescription" class="form-label">Description</label>
+            <textarea id="testDescription" class="form-control" placeholder="Describe the test"></textarea>
+          </div>
+          <!-- You can add more fields as needed -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="startTestBtn">Start Test</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
