@@ -1,7 +1,18 @@
 # db_utils.py
-from .models import User, Device, DeviceData, Patient
+
+try:
+    from .models import User, Device, DeviceData, Patient  # Relative import for package context
+except ImportError:
+    from website.models import User, Device, DeviceData, Patient  # Absolute import for script execution
+
 from werkzeug.security import generate_password_hash
-from . import db
+
+try:
+    from . import db  # Relative import for package context
+except ImportError:
+    from website import db, create_app  # Absolute import for direct script execution
+    from website.config import DevelopmentConfig
+
 from sqlalchemy import func
 from datetime import datetime
 
@@ -173,58 +184,79 @@ def list_all_patients():
 
 if __name__ == '__main__':
     import argparse
+    # from website import create_app
+    # from website.models import User, Device, DeviceData, Patient
+    # from website.db_utils import (
+    #     list_users,
+    #     list_devices_for_user,
+    #     list_all_devices,
+    #     list_device_data,
+    #     find_user_by_email,
+    #     find_patient_by_id,
+    #     find_patient_by_name,
+    #     list_all_patients,
+    # )
+
+    # Initialize argument parser
     parser = argparse.ArgumentParser(description="CLI Tools for Interacting with the Database")
-    
     parser.add_argument('--list-users', action='store_true', help="List all users")
     parser.add_argument('--list-devices-for-user', type=int, help="List devices for a specific user by user ID")
     parser.add_argument('--list-all-devices', action='store_true', help="List all devices")
     parser.add_argument('--list-device-data', type=str, help="List data points for a specific device by serial number")
     parser.add_argument('--find-user-by-email', type=str, help="Find a user by their email")
-    parser.add_argument('--find-patient-by-id', type=int, help="Find a patient by their ID.")
-    parser.add_argument('--find-patient-by-name', type=str, help="Find a patient by name.")
+    parser.add_argument('--find-patient-by-id', type=int, help="Find a patient by their ID")
+    parser.add_argument('--find-patient-by-name', type=str, help="Find a patient by name")
     parser.add_argument('--list-all-patients', action='store_true', help="List all patients")
 
-    
+    # Parse arguments
     args = parser.parse_args()
-    
-    if args.list_users:
-        list_users()
-    elif args.list_devices_for_user:
-        list_devices_for_user(args.list_devices_for_user)
-    elif args.list_all_devices:
-        list_all_devices()
-    elif args.list_device_data:
-        list_device_data(args.list_device_data)
-    elif args.find_user_by_email:
-        find_user_by_email(args.find_user_by_email)
-    elif args.find_patient_by_id:
-        find_patient_by_id(args.find_patient_by_id)
-    elif args.find_patient_by_name:
-        find_patient_by_name(args.find_patient_by_name)
-    elif args.list_all_patients:
-        list_all_patients()
 
+    # Create Flask app
+    app = create_app(DevelopmentConfig)  # Adjust if `DevelopmentConfig` is needed: `create_app(DevelopmentConfig)`
 
+    # Push app context to handle database operations
+    with app.app_context():
+        if args.list_users:
+            list_users()
+        elif args.list_devices_for_user:
+            list_devices_for_user(args.list_devices_for_user)
+        elif args.list_all_devices:
+            list_all_devices()
+        elif args.list_device_data:
+            list_device_data(args.list_device_data)
+        elif args.find_user_by_email:
+            find_user_by_email(args.find_user_by_email)
+        elif args.find_patient_by_id:
+            find_patient_by_id(args.find_patient_by_id)
+        elif args.find_patient_by_name:
+            find_patient_by_name(args.find_patient_by_name)
+        elif args.list_all_patients:
+            list_all_patients()
 
+# ======================================
+# Usage Guide for `website` Module
+# ======================================
 
-## Usage
+# Command Prompt (In Project Root):
+# To interact with the database via Flask shell:
+# flask --app website shell
+# This allows you to use the following functions to manually add or query database entries.
 
-# cmd prmpt (in root): flask --app website shell 
-# this allows you to utilize the functions above to manually add db entries
+# Example Usage in Flask Shell:
 
-## Example Usage: 
-# 1.
+# 1. Add a User
 # from website.db_utils import add_user
 # add_user(email="test@example.com", password="password123", first_name="Test")
 
-# 2.
+# 2. Add a Device
+# First, find the `user_id` using the `list_users()` function.
+# Then:
 # from website.db_utils import add_device
-# Example command to add a device for a user with user_id=1 -> NOTE: for this to work, you will need to utilize the list_users() function to find the user_id
 # add_device(name="Knee Tracker", device_type="Physical Therapy Device", serial_number="SN123456", user_id=1)
 
-# 3. tag: Outdated -> Needs to be updated for big db changes
+# 3. Add Device Data
+# This example assumes you have a device with `serial_number='SN123456'`:
 # from website.db_utils import add_device_data
-# Example command to add data for a device with serial number 'SN123456'
 # add_device_data(
 #     serial_number='SN123456',
 #     time=2138,  # Time sent from the Arduino
@@ -233,31 +265,29 @@ if __name__ == '__main__':
 #     ax3=0.05, ay3=0.06, az3=1.05, gx3=1.0, gy3=-0.2, gz3=0.2
 # )
 
-# 4.
+# 4. Find a Patient by ID
 # from website.db_utils import find_patient_by_id
-# find_patient_by_id(5)  # Suppose 5 is a patient ID
+# find_patient_by_id(5)  # Replace 5 with the desired patient ID.
 
-# 5.
+# 5. Find a Patient by Name
 # from website.db_utils import find_patient_by_name
-# find_patient_by_name("John")  # Lists all patients whose name includes "John"
+# find_patient_by_name("John")  # Lists all patients whose name includes "John".
 
-
-
-
-
-## Example CLI Commands
+# ======================================
+# Example CLI Commands
+# ======================================
 
 # List all users:
-# python db_utils.py --list-users
+# python website/db_utils.py --list-users
 
 # List devices for a user with ID 1:
-# python db_utils.py --list-devices-for-user 1
+# python website/db_utils.py --list-devices-for-user 1
 
 # List all devices:
-# python db_utils.py --list-all-devices
+# python website/db_utils.py --list-all-devices
 
 # List data points for a device with ID 2:
-# python db_utils.py --list-device-data 2
+# python website/db_utils.py --list-device-data 2
 
 # Find user by email:
-# python db_utils.py --find-user-by-email 'user@example.com'
+# python website/db_utils.py --find-user-by-email 'user@example.com'
