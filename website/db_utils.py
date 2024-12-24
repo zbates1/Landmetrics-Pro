@@ -164,11 +164,57 @@ def find_patient_by_name(name):
     else:
         print(f"No patients found with name containing '{name}'.")
 
+def find_tests_by_patient_id(patient_id):
+    """
+    Finds all test-related data_points (DeviceData) for the given patient ID,
+    printing out each test_name, ID, and related info.
+    """
+    patient = Patient.query.get(patient_id)
+    if patient:
+        # All DeviceData rows for this patient
+        tests = patient.data_points
+        if tests:
+            print(f"Tests for patient {patient.name} (ID: {patient.id}):")
+            for t in tests:
+                # 't' is a DeviceData row
+                # If you only want DeviceData rows that have a non-empty test_name, you can check:
+                if t.test_name:
+                    print(f" - DeviceData ID: {t.id}, Test Name: {t.test_name}, Device ID: {t.device_id}")
+                else:
+                    print(f" - DeviceData ID: {t.id}, No test_name set")
+        else:
+            print(f"No data points (tests) found for patient {patient.name}.")
+    else:
+        print(f"No patient found with ID {patient_id}.")
+
+def find_unique_request_timestamps_by_patient_id(patient_id):
+    """
+    Finds all unique request_timestamp values for the given patient ID.
+    Prints out how many unique timestamps there are and lists them.
+    """
+    patient = Patient.query.get(patient_id)
+    if not patient:
+        print(f"No patient found with ID {patient_id}.")
+        return
+    
+    # Extract all request_timestamps from the patient's DeviceData
+    timestamps = [dp.request_timestamp for dp in patient.data_points]
+    if not timestamps:
+        print(f"No data points found for patient {patient.name} (ID: {patient.id}).")
+        return
+    
+    # Convert to a set to get unique values
+    unique_timestamps = set(timestamps)
+    
+    print(f"Unique request timestamps for patient {patient.name} (ID: {patient.id}):")
+    print(f"Found {len(unique_timestamps)} unique timestamp(s).")
+    for ts in sorted(unique_timestamps):
+        print(f" - {ts}")
+
 def list_all_patients():
     """
     Lists all patients in the database with their ID, name, and provider's email.
     """
-    from .models import Patient
     patients = Patient.query.all()
     if patients:
         print(f"{'Patient ID':<10} {'Patient Name':<25} {'DOB':<12} {'Gender':<10} {'Provider Email':<30}")
@@ -195,6 +241,8 @@ if __name__ == '__main__':
     #     find_patient_by_id,
     #     find_patient_by_name,
     #     list_all_patients,
+    #     find_tests_by_patient_id,
+    #     find_unique_request_timestamps_by_patient_id
     # )
 
     # Initialize argument parser
@@ -207,6 +255,8 @@ if __name__ == '__main__':
     parser.add_argument('--find-patient-by-id', type=int, help="Find a patient by their ID")
     parser.add_argument('--find-patient-by-name', type=str, help="Find a patient by name")
     parser.add_argument('--list-all-patients', action='store_true', help="List all patients")
+    parser.add_argument('--find-tests-by-patient-id', type=int, help="Find tests by patient ID")
+    parser.add_argument('--find-unique-request-timestamps-by-patient-id', type=int, help="Find unique request timestamps by patient ID")
 
     # Parse arguments
     args = parser.parse_args()
@@ -232,6 +282,10 @@ if __name__ == '__main__':
             find_patient_by_name(args.find_patient_by_name)
         elif args.list_all_patients:
             list_all_patients()
+        elif args.find_tests_by_patient_id:
+            find_tests_by_patient_id(args.find_tests_by_patient_id)
+        elif args.find_unique_request_timestamps_by_patient_id:
+            find_unique_request_timestamps_by_patient_id(args.find_unique_request_timestamps_by_patient_id)
 
 # ======================================
 # Usage Guide for `website` Module

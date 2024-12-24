@@ -19,23 +19,8 @@
         <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
     </div>
 
-    <!-- Device Selection -->
-    <div class="row mb-4">
-        <div class="col-md-6 mx-auto">
-            <label for="deviceSelect" class="form-label">Select a Device</label>
-            <select id="deviceSelect" class="form-select">
-                <option value="" disabled {% if not selected_device_id %}selected{% endif %}>Select a Device</option>
-                {% for device in devices %}
-                    <option value="{{ device.id }}" {% if device.id == selected_device_id %}selected{% endif %}>
-                        {{ device.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
     <!-- Request Timestamp Selection -->
-    {% if selected_device_id %}
+    {% if selected_patient_id %}
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="requestTimestampSelect" class="form-label">Select a Session (Request Timestamp)</label>
@@ -52,7 +37,7 @@
     {% endif %}
 
     <!-- Chart Type Selection -->
-    {% if selected_device_id and device_data[selected_device_id] %}
+    {% if selected_patient_id and device_data[selected_patient_id] %}
     <div class="row mb-4">
         <div class="col-md-6 mx-auto">
             <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
@@ -65,7 +50,7 @@
     {% endif %}
 
     <!-- Chart Area -->
-    {% if selected_device_id and device_data[selected_device_id] %}
+    {% if selected_patient_id and device_data[selected_patient_id] %}
     <div class="row">
         <div class="col-md-12">
             <canvas id="dataChart" style="max-height: 500px;"></canvas>
@@ -186,27 +171,15 @@
             }
         });
 
-        deviceSelect.addEventListener('change', function() {
-            const deviceId = deviceSelect.value;
-            if (deviceId) {
-                let url = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
-                if (selectedPatientId) {
-                    url += "&patient_id=" + selectedPatientId;
-                }
-                window.location.href = url;
-            }
-        });
-
         if (requestTimestampSelect) {
             requestTimestampSelect.addEventListener('change', function() {
-                const deviceId = deviceSelect.value;
                 const requestTimestamp = requestTimestampSelect.value;
-                let url = "{{ url_for('data_view.user_data') }}?device_id=" + deviceId;
+                let url = "{{ url_for('data_view.user_data') }}";
                 if (requestTimestamp) {
-                    url += "&request_timestamp=" + encodeURIComponent(requestTimestamp);
+                    url += "?request_timestamp=" + encodeURIComponent(requestTimestamp);
                 }
                 if (selectedPatientId) {
-                    url += "&patient_id=" + selectedPatientId;
+                    url += (requestTimestamp ? "&" : "?") + "patient_id=" + selectedPatientId;
                 }
                 window.location.href = url;
             });
@@ -217,7 +190,7 @@
         }
 
         function updateChart() {
-            const data = deviceData[selectedDeviceId];
+            const data = deviceData[selectedPatientId];
             if (!data) return;
 
             const chartType = chartTypeSelect.value;
@@ -307,7 +280,7 @@
         }
 
         // Initial chart rendering if device is selected
-        if (selectedDeviceId && deviceData[selectedDeviceId] && ctx && selectedPatientId) {
+        if (selectedPatientId && deviceData[selectedPatientId] && ctx) {
             updateChart();
         }
 
