@@ -6,6 +6,7 @@
 <div class="container my-5" id="dashboard" style="display: none;">
     <h1 class="text-center mb-5">Patient & Device Data Dashboard</h1>
     <h3 class="text-center mb-5">Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}</h3>
+    <p class="text-center" style="font-style: italic;">Patient ID: {{ selected_patient_id if selected_patient_id else "N/A" }}</p>
 
     <script>
         var csrfToken = "{{ csrf_token }}";

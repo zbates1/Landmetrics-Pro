@@ -187,6 +187,24 @@ def find_tests_by_patient_id(patient_id):
     else:
         print(f"No patient found with ID {patient_id}.")
 
+def find_data_by_patient_id(patient_id): # tag: Outdated -> it looks like this has the same functionality as the above function
+    patient = Patient.query.get(patient_id)
+    if patient:
+        # All DeviceData rows for this patient
+        tests = patient.data_points
+        if tests:
+            print(f"Data points for patient {patient.name} (ID: {patient.id}):")
+            for t in tests:
+                # 't' is a DeviceData row
+                print(f" - DeviceData ID: {t.id}, Request Timestamp: {t.request_timestamp}")
+        
+            return tests # this returns the DeviceData rows
+        else:
+            print(f"No data points found for patient {patient.name}.")
+    else:
+        print(f"No patient found with ID {patient_id}.")
+
+
 def find_unique_request_timestamps_by_patient_id(patient_id):
     """
     Finds all unique request_timestamp values for the given patient ID.
@@ -242,6 +260,7 @@ if __name__ == '__main__':
     #     find_patient_by_name,
     #     list_all_patients,
     #     find_tests_by_patient_id,
+    #     find_data_by_patient_id,
     #     find_unique_request_timestamps_by_patient_id
     # )
 
@@ -257,6 +276,7 @@ if __name__ == '__main__':
     parser.add_argument('--list-all-patients', action='store_true', help="List all patients")
     parser.add_argument('--find-tests-by-patient-id', type=int, help="Find tests by patient ID")
     parser.add_argument('--find-unique-request-timestamps-by-patient-id', type=int, help="Find unique request timestamps by patient ID")
+    parser.add_argument('--find-data-by-patient-id', type=int, help="Find data by patient ID")
 
     # Parse arguments
     args = parser.parse_args()
@@ -286,7 +306,10 @@ if __name__ == '__main__':
             find_tests_by_patient_id(args.find_tests_by_patient_id)
         elif args.find_unique_request_timestamps_by_patient_id:
             find_unique_request_timestamps_by_patient_id(args.find_unique_request_timestamps_by_patient_id)
-
+        elif args.find_data_by_patient_id:
+            find_data_by_patient_id(args.find_data_by_patient_id)
+        else:
+            parser.print_help()
 # ======================================
 # Usage Guide for `website` Module
 # ======================================

@@ -14,6 +14,13 @@ import json
 
 from flask_wtf.csrf import generate_csrf
 
+# This new import will be used instead of the old function, 'get device data below'
+try:
+    from .db_utils import find_data_by_patient_id
+except ImportError:
+    from website.db_utils import find_data_by_patient_id  # Absolute import for script execution
+
+
 # Initialize the blueprint
 data_view = Blueprint('data_view', __name__)
 
@@ -28,20 +35,27 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def get_device_data(device_id, request_timestamp=None):
+def get_patient_data(patient_id, request_timestamp=None):
     """
     Retrieve data for a specific device and request_timestamp belonging to the current user.
     Updated to reflect the changed DeviceData schema.
     """
     try:
         # Ensure the device belongs to the current user
-        device = Device.query.filter_by(id=device_id, user_id=current_user.id).first()
-        if not device:
-            logger.warning(f"Device ID {device_id} not found for user {current_user.id}")
-            return {}
+        # device = Device.query.filter_by(id=device_id, user_id=current_user.id).first()
+        # if not device:
+        #     logger.warning(f"Device ID {device_id} not found for user {current_user.id}")
+        #     return {}
 
         # Build the query for data points
-        query = DeviceData.query.filter_by(device_id=device_id)
+        # query = DeviceData.query.filter_by(device_id=device_id) # this is outdated, I need to query for patient_id
+
+        patient = Patient.query.filter_by(id=patient_id, user_id=current_user.id).first()
+        if not patient:
+            logger.warning(f"Patient ID {patient_id} not found for user {current_user.id}")
+            return {}
+        query = DeviceData.query.filter_by(patient_id=patient_id)
+
         if request_timestamp:
             # Note: request_timestamp should be a datetime if stored as a DateTime.
             # If you're passing it as a string from the template, you may need to convert it.
@@ -58,7 +72,7 @@ def get_device_data(device_id, request_timestamp=None):
         data_points = query.order_by(DeviceData.time).all()
 
         if not data_points:
-            logger.warning(f"No data points found for device ID {device_id} and request_timestamp {request_timestamp}")
+            logger.warning(f"No data points found for Patient ID {patient_id} and request_timestamp {request_timestamp}")
             return {}
 
         # Prepare data structure based on the updated DeviceData fields
@@ -181,23 +195,29 @@ def user_data():
         device_data = {}
         request_timestamps = []
 
-        if selected_device_id:
-            # Get the list of unique request_timestamps for the selected device
+        if selected_patient_id:
+            # Now, get the list of unique request_timestamps for the selected patient
             request_timestamps_query = (
                 db.session.query(DeviceData.request_timestamp)
-                .filter_by(device_id=selected_device_id)
+                .filter_by(patient_id=selected_patient_id)
                 .distinct()
                 .order_by(DeviceData.request_timestamp)
                 .all()
             )
-            # Extract unique request_timestamps
-            request_timestamps = [rt[0].strftime('%Y-%m-%d %H:%M:%S') for rt in request_timestamps_query if rt[0]]
+            request_timestamps = [
+                rt[0].strftime('%Y-%m-%d %H:%M:%S')
+                for rt in request_timestamps_query
+                if rt[0]
+            ]
 
             # Retrieve data for the selected device and request_timestamp
-            data_dict = get_device_data(selected_device_id, selected_request_timestamp)
+            data_dict = get_patient_data(selected_device_id, selected_request_timestamp)
             if data_dict:
                 device_data[selected_device_id] = data_dict
-            else:
+
+            # Trying new function, since old one wasn't working
+            # data_dict = find
+            # else:
                 # If no data, redirect but keep the same device_id for user convenience
                 flash("No data available for the selected device and session.", category='error')
                 return redirect(url_for('data_view.user_data', device_id=selected_device_id, patient_id=selected_patient_id))
