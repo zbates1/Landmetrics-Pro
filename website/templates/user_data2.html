@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Patient & Device Data Visualization{% endblock %}
+
+{% block content %}
+<div class="container my-5" id="dashboard" style="display: none;">
+    <h1 class="text-center mb-5">Patient & Device Data Dashboard</h1>
+    <h3 class="text-center mb-5">
+      Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}
+    </h3>
+    <p class="text-center" style="font-style: italic;">
+      Patient ID: {{ selected_patient_id if selected_patient_id else "N/A" }}
+    </p>
+
+    <!-- Hidden CSRF token (if needed) -->
+    <script>
+        var csrfToken = "{{ csrf_token }}";
+    </script>
+    
+    <input type="hidden" id="csrf_token" value="{{ csrf_token() or '' }}">
+    
+    <!-- Patient Actions -->
+    <div class="text-center mb-5">
+        <button class="btn btn-primary" id="viewTestsBtn">View Past Health Tests</button>
+        <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
+    </div>
+
+    <!-- Request Timestamp Selection -->
+    {% if selected_patient_id %}
+      <div class="row mb-4">
+          <div class="col-md-6 mx-auto">
+              <label for="requestTimestampSelect" class="form-label">
+                Select a Session (Request Timestamp)
+              </label>
+              <select id="requestTimestampSelect" class="form-select">
+                  <!-- "All Sessions" option -->
+                  <option value="" {% if not selected_request_timestamp %}selected{% endif %}>
+                      All Sessions
+                  </option>
+                  {% for rt in request_timestamps %}
+                      <option value="{{ rt }}"
+                          {% if rt == selected_request_timestamp %}selected{% endif %}
+                      >
+                        {{ rt }}
+                      </option>
+                  {% endfor %}
+              </select>
+          </div>
+      </div>
+    {% endif %}
+
+    <!-- Chart Type Selection -->
+    {% if selected_patient_id and device_data[selected_patient_id] %}
+      <div class="row mb-4">
+          <div class="col-md-6 mx-auto">
+              <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
+              <select id="chartTypeSelect" class="form-select">
+                  <option value="line" selected>Line Chart</option>
+                  <!-- Add more chart types if desired -->
+              </select>
+          </div>
+      </div>
+    {% endif %}
+
+    <!-- Chart Area -->
+    {% if selected_patient_id and device_data[selected_patient_id] %}
+      <div class="row">
+          <div class="col-md-12">
+              <canvas id="dataChart" style="max-height: 500px;"></canvas>
+          </div>
+      </div>
+    {% endif %}
+</div>
+
+<!-- Include your modals (patient selection & new test) -->
+{% include "_patient_selection_modal.html" %}
+{% include "_new_test_modal.html" %}
+
+<!-- Include Chart.js (for charts) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // ------------------------
+    // Data from the server
+    // ------------------------
+    const deviceData = {{ device_data | tojson }};  // Keyed by patient_id
+    const selectedRequestTimestamp = {{ selected_request_timestamp | tojson }};
+    const requestTimestamps = {{ request_timestamps | tojson }};
+    const selectedPatientId = {{ selected_patient_id | tojson }}; 
+    const patientsExist = {{ (patients|length > 0) | tojson }}; 
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Grab page elements
+        const dashboard = document.getElementById('dashboard');
+        const patientModalEl = document.getElementById('patientModal');
+        const patientModal = new bootstrap.Modal(patientModalEl, {
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        const patientSelection = document.getElementById('patientSelection');
+        const addPatientForm = document.getElementById('addPatientForm');
+        const addPatientToggleBtn = document.getElementById('addPatientToggleBtn');
+        const cancelAddPatientBtn = document.getElementById('cancelAddPatientBtn');
+        const selectPatientBtn = document.getElementById('selectPatientBtn');
+        const patientSelect = document.getElementById('patientSelect');
+        const savePatientBtn = document.getElementById('savePatientBtn');
+
+        const requestTimestampSelect = document.getElementById('requestTimestampSelect');
+        const chartTypeSelect = document.getElementById('chartTypeSelect');
+        const ctx = document.getElementById('dataChart')
+                  ? document.getElementById('dataChart').getContext('2d')
+                  : null;
+
+        let chart;
+
+        // ------------------------------------------
+        // Auto-show the modal if no patient selected
+        // ------------------------------------------
+        if (!selectedPatientId) {
+            // If there are no patients, show the "Add Patient" form directly
+            if (!patientsExist) {
+                patientSelection.style.display = 'none';
+                addPatientForm.style.display = 'block';
+            }
+            patientModal.show();
+        } else {
+            // Show the dashboard
+            dashboard.style.display = 'block';
+        }
+
+        // ------------------------------------------
+        // Toggle "Select Patient" / "Add Patient"
+        // ------------------------------------------
+        addPatientToggleBtn.addEventListener('click', function() {
+            patientSelection.style.display = 'none';
+            addPatientForm.style.display = 'block';
+        });
+
+        cancelAddPatientBtn.addEventListener('click', function() {
+            addPatientForm.style.display = 'none';
+            patientSelection.style.display = 'block';
+        });
+
+        // ------------------------------------------
+        // Select an existing patient
+        // ------------------------------------------
+        selectPatientBtn.addEventListener('click', function() {
+            const selectedId = patientSelect.value;
+            if (selectedId) {
+                // Redirect to user_data with ?patient_id=...
+                window.location.href = "{{ url_for('data_view.user_data') }}?patient_id=" + selectedId;
+            }
+        });
+
+        // ------------------------------------------
+        // Save (Add) a new patient
+        // ------------------------------------------
+        savePatientBtn.addEventListener('click', function() {
+            const name = document.getElementById('newPatientName').value;
+            const dob = document.getElementById('newPatientDOB').value;
+            const gender = document.getElementById('newPatientGender').value;
+            const injury = document.getElementById('newPatientInjury').value;
+            const csrfToken = document.getElementById('csrf_token').value;
+
+            if (name && dob && gender) {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('date_of_birth', dob);
+                formData.append('gender', gender);
+                formData.append('injury', injury);
+                formData.append('csrf_token', csrfToken); // Include CSRF token
+
+                fetch("{{ url_for('data_view.add_patient') }}", {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload user_data with the new patient
+                        window.location.href = (
+                            "{{ url_for('data_view.user_data') }}?patient_id=" + data.patient_id
+                        );
+                    } else {
+                        alert("Error adding patient: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Error adding patient.");
+                });
+            } else {
+                alert("Please fill out all required fields (Name, DOB, Gender).");
+            }
+        });
+
+        // ------------------------------------------
+        // Request Timestamp selection
+        // ------------------------------------------
+        if (requestTimestampSelect) {
+            requestTimestampSelect.addEventListener('change', function() {
+                const requestTimestamp = requestTimestampSelect.value;
+                let url = "{{ url_for('data_view.user_data') }}";
+
+                // If the user picks a specific timestamp, add it to the URL
+                if (requestTimestamp) {
+                    url += "?request_timestamp=" + encodeURIComponent(requestTimestamp);
+                }
+                // Always include the patient_id if we have one
+                if (selectedPatientId) {
+                    url += (requestTimestamp ? "&" : "?") + "patient_id=" + selectedPatientId;
+                }
+                window.location.href = url;
+            });
+        }
+
+        // ------------------------------------------
+        // Chart Type selection
+        // ------------------------------------------
+        if (chartTypeSelect && ctx) {
+            chartTypeSelect.addEventListener('change', updateChart);
+        }
+
+        // ------------------------------------------
+        // Chart rendering function
+        // ------------------------------------------
+        function updateChart() {
+            // deviceData is keyed by patient_id
+            const data = deviceData[selectedPatientId];
+            if (!data) return;
+
+            // "chartTypeSelect" can be line, bar, etc.
+            const chartType = chartTypeSelect.value;
+
+            let labels = data['timestamps'] || [];
+            let datasets = [];
+
+            // Updated variable list to reflect your DeviceData schema
+            const variables = [
+                'ax1', 'ay1', 'az1',
+                'ox1', 'oy1', 'oz1', 'ow1',
+                'ax2', 'ay2', 'az2',
+                'ox2', 'oy2', 'oz2', 'ow2'
+            ];
+
+            const colors = [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)',
+                'rgba(199, 199, 199, 0.6)',
+                'rgba(83, 102, 255, 0.6)',
+                'rgba(83, 255, 126, 0.6)',
+                'rgba(255, 83, 183, 0.6)',
+                'rgba(255, 234, 83, 0.6)',
+                'rgba(83, 255, 234, 0.6)',
+                'rgba(83, 255, 83, 0.6)',
+                'rgba(255, 83, 83, 0.6)',
+                'rgba(83, 83, 255, 0.6)',
+                'rgba(255, 83, 255, 0.6)',
+                'rgba(83, 83, 83, 0.6)',
+                'rgba(255, 255, 83, 0.6)'
+            ];
+
+            // Build each dataset
+            variables.forEach((variable, index) => {
+                if (Array.isArray(data[variable])) {
+                    datasets.push({
+                        label: variable,
+                        data: data[variable],
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length],
+                        fill: false
+                    });
+                }
+            });
+
+            // Destroy old chart if it exists
+            if (chart) {
+                chart.destroy();
+            }
+
+            // Create a new chart
+            chart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Sensor Values'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // ------------------------------------------
+        // Initial chart rendering (if patient is selected and data is available)
+        // ------------------------------------------
+        if (selectedPatientId && deviceData[selectedPatientId] && ctx) {
+            updateChart();
+        }
+
+        // ------------------------------------------
+        // Hide modal & show dashboard if patient is known
+        // ------------------------------------------
+        if (selectedPatientId && patientModal) {
+            patientModal.hide();
+            dashboard.style.display = 'block';
+        }
+
+        // ------------------------------------------
+        // View Past Tests / New Test logic
+        // ------------------------------------------
+        document.getElementById('viewTestsBtn').addEventListener('click', function() {
+            // Redirect to your "view_tests" route
+            window.location.href = (
+                "{{ url_for('data_view.view_tests') }}?patient_id=" + selectedPatientId
+            );
+        });
+
+        const newTestModalEl = document.getElementById('newTestModal');
+        const newTestModal = new bootstrap.Modal(newTestModalEl);
+        const startTestBtn = document.getElementById('startTestBtn');
+
+        document.getElementById('newTestBtn').addEventListener('click', function() {
+            newTestModal.show();
+        });
+
+        startTestBtn.addEventListener('click', function() {
+            const testName = document.getElementById('testName').value;
+            const testDescription = document.getElementById('testDescription').value;
+            // Example placeholder for starting a new test
+            alert("Test started with name: " + testName + "\nDescription: " + testDescription);
+            newTestModal.hide();
+        });
+    });
+</script>
+{% endblock %}

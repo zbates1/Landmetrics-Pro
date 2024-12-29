@@ -17,6 +17,7 @@ setup(
         "python-dotenv>=1.0.1",
         "SQLAlchemy>=2.0.30",
         "Werkzeug>=2.3.8",
+        "psycopg2",
     ],
     extras_require={
         "dev": [

@@ -69,7 +69,10 @@ def get_patient_data(patient_id, request_timestamp=None):
                 logger.warning(f"Invalid request_timestamp format: {request_timestamp}")
                 return {}
 
+        print(f'Get Patient Data fn: Querying for Patient ID {patient_id} and request_timestamp {request_timestamp}')
         data_points = query.order_by(DeviceData.time).all()
+        print(f'Get Patient Data fn: Found {len(data_points)} data points for Patient ID {patient_id} and request_timestamp {request_timestamp}')
+        # print(f'\n\nData points have the following fields: \n{data_points[0].__dict__.keys()}\n\n')
 
         if not data_points:
             logger.warning(f"No data points found for Patient ID {patient_id} and request_timestamp {request_timestamp}")
@@ -78,6 +81,8 @@ def get_patient_data(patient_id, request_timestamp=None):
         # Prepare data structure based on the updated DeviceData fields
         data_dict = {
             'timestamps': [],
+            'request_timestamp': [],
+            'test_name': [],
             'ax1': [], 'ay1': [], 'az1': [], 'ox1': [], 'oy1': [], 'oz1': [], 'ow1': [],
             'ax2': [], 'ay2': [], 'az2': [], 'ox2': [], 'oy2': [], 'oz2': [], 'ow2': []
         }
@@ -86,6 +91,8 @@ def get_patient_data(patient_id, request_timestamp=None):
             # Convert data_point.time from float to datetime string
             timestamp_str = datetime.fromtimestamp(data_point.time).strftime('%Y-%m-%d %H:%M:%S')
             data_dict['timestamps'].append(timestamp_str)
+            data_dict['request_timestamp'].append(data_point.request_timestamp)
+            data_dict['test_name'].append(data_point.test_name)
             data_dict['ax1'].append(data_point.ax1)
             data_dict['ay1'].append(data_point.ay1)
             data_dict['az1'].append(data_point.az1)
@@ -196,7 +203,7 @@ def user_data():
         request_timestamps = []
 
         if selected_patient_id:
-            # Now, get the list of unique request_timestamps for the selected patient
+            # Gather unique request_timestamps for this patient
             request_timestamps_query = (
                 db.session.query(DeviceData.request_timestamp)
                 .filter_by(patient_id=selected_patient_id)
@@ -210,20 +217,22 @@ def user_data():
                 if rt[0]
             ]
 
-            # Retrieve data for the selected device and request_timestamp
-            data_dict = get_patient_data(selected_device_id, selected_request_timestamp)
-            if data_dict:
-                device_data[selected_device_id] = data_dict
+            # Retrieve data for the selected patient + timestamp
+            print(f"\n User data fn: Selected patient ID: {selected_patient_id} and request timestamp: {selected_request_timestamp}\n\n")
+            data_dict = get_patient_data(selected_patient_id, selected_request_timestamp)
 
-            # Trying new function, since old one wasn't working
-            # data_dict = find
-            # else:
-                # If no data, redirect but keep the same device_id for user convenience
-                flash("No data available for the selected device and session.", category='error')
-                return redirect(url_for('data_view.user_data', device_id=selected_device_id, patient_id=selected_patient_id))
+            if data_dict:
+                print(f"\n\n User data fn: Data dict has the following keys: \n{data_dict.keys()}\n\n")
+                # If you're still using 'selected_device_id', store under that key:
+                device_data[selected_device_id] = data_dict
+            else:
+                # Instead of redirecting again, we simply flash a warning
+                # and give an empty dataset so we don't cause an infinite loop.
+                flash("No data available for the selected patient and session.", category='error')
+                device_data[selected_device_id] = {}
 
         return render_template(
-            "user_data.html",
+            "user_data2.html",
             devices=devices,
             selected_device_id=selected_device_id,
             request_timestamps=request_timestamps,
@@ -231,9 +240,9 @@ def user_data():
             device_data=device_data,
             user=current_user,
             patients=patients,
-            selected_patient_id=selected_patient_id if selected_patient_id is not None else None,
+            selected_patient_id=selected_patient_id if selected_patient_id else None,
             current_patient_name=current_patient_name,
-            csrf=generate_csrf() # THIS MAY NOT BE FUNCTIONAL FOR THE ADD PATIENT BUTTON, NOT SURE SINCE ADD_PATIENT ENDPOINT ONLY USES JSONIFY RETURNS
+            csrf=generate_csrf()  # for the add_patient endpoint if needed
         )
 
     except SQLAlchemyError as e:

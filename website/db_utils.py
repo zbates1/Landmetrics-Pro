@@ -8,7 +8,8 @@ except ImportError:
 from werkzeug.security import generate_password_hash
 
 try:
-    from . import db  # Relative import for package context
+    from . import db, create_app  # Relative import for package context
+    from .config import DevelopmentConfig
 except ImportError:
     from website import db, create_app  # Absolute import for direct script execution
     from website.config import DevelopmentConfig
@@ -229,6 +230,19 @@ def find_unique_request_timestamps_by_patient_id(patient_id):
     for ts in sorted(unique_timestamps):
         print(f" - {ts}")
 
+def find_patient_data_by_id_and_timestamp(patient_id, request_timestamp):
+    """
+    Finds data points (DeviceData) for the given patient ID and request_timestamp.
+    """
+    patient = Patient.query.get(patient_id)
+    if not patient:
+        print(f"No patient found with ID {patient_id}.")
+        return
+    
+    data_points = patient.data_points.filter_by(request_timestamp=request_timestamp).all()
+    if data_points:
+        print(f"Length of data_points for patient {patient.name} (ID: {patient.id}) and request_timestamp {request_timestamp}: {len(data_points)}")
+
 def list_all_patients():
     """
     Lists all patients in the database with their ID, name, and provider's email.
@@ -262,6 +276,7 @@ if __name__ == '__main__':
     #     find_tests_by_patient_id,
     #     find_data_by_patient_id,
     #     find_unique_request_timestamps_by_patient_id
+    #     find_patient_data_by_id_and_timestamp
     # )
 
     # Initialize argument parser
@@ -277,6 +292,7 @@ if __name__ == '__main__':
     parser.add_argument('--find-tests-by-patient-id', type=int, help="Find tests by patient ID")
     parser.add_argument('--find-unique-request-timestamps-by-patient-id', type=int, help="Find unique request timestamps by patient ID")
     parser.add_argument('--find-data-by-patient-id', type=int, help="Find data by patient ID")
+    parser.add_argument('--find-patient-data-by-id-and-timestamp', type=int, help="Find patient data by patient ID and request timestamp")
 
     # Parse arguments
     args = parser.parse_args()
@@ -308,6 +324,8 @@ if __name__ == '__main__':
             find_unique_request_timestamps_by_patient_id(args.find_unique_request_timestamps_by_patient_id)
         elif args.find_data_by_patient_id:
             find_data_by_patient_id(args.find_data_by_patient_id)
+        elif args.find_patient_data_by_id_and_timestamp:
+            find_patient_data_by_id_and_timestamp(args.find_patient_data_by_id_and_timestamp)
         else:
             parser.print_help()
 # ======================================
@@ -368,3 +386,7 @@ if __name__ == '__main__':
 
 # Find user by email:
 # python website/db_utils.py --find-user-by-email 'user@example.com'
+
+# Find patient data by ID and timestamp:
+# python website/db_utils.py --find-patient-data-by-id-and-timestamp 2 2024-12-24 03:20:48
+# python -m website.db_utils --find-patient-data-by-id-and-timestamp 2 2024-12-24 03:20:48
