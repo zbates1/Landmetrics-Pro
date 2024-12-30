@@ -148,7 +148,9 @@ def receive_data():
             return jsonify({"status": "error", "message": "Mismatch in lengths of data arrays"}), 400
 
     # Create a request_timestamp for each data point
-    request_timestamps = [datetime.utcnow() for _ in range(data_length)]
+    # request_timestamps = [datetime.utcnow() for _ in range(data_length)]
+    request_timestamps = [datetime.utcnow().replace(microsecond=0) for _ in range(data_length)]
+
 
     new_data_entries = []
     for i in range(data_length):

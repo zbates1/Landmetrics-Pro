@@ -17,7 +17,8 @@ except ImportError:
 from sqlalchemy import func
 from datetime import datetime
 from sqlalchemy.orm import Session
-
+from sqlalchemy.dialects import sqlite
+from datetime import timedelta
 
 # Add a new user
 def add_user(email, password, first_name):
@@ -231,6 +232,7 @@ def find_unique_request_timestamps_by_patient_id(patient_id):
     for ts in sorted(unique_timestamps):
         print(f" - {ts}")
 
+
 def find_patient_data_by_id_and_timestamp(patient_id, request_timestamp):
     """
     Finds data points (DeviceData) for the given patient ID and request_timestamp.
@@ -248,24 +250,36 @@ def find_patient_data_by_id_and_timestamp(patient_id, request_timestamp):
         return
     
     # Query the database
-    session = Session(db.engine)  # Ensure `db` is your SQLAlchemy instance
-    patient = session.get(Patient, patient_id)  # Use `Session.get()` per SQLAlchemy 2.0+
-    if not patient:
-        print(f"No patient found with ID {patient_id}.")
-        return
-    
-    # Query related DeviceData records
-    data_points = (
-        session.query(DeviceData)
-        .filter_by(patient_id=patient_id)
-        .filter(DeviceData.request_timestamp == request_timestamp)
-        .all()
-    )
-    
-    if data_points:
-        print(f"Length of data_points for patient {patient.name} (ID: {patient.id}) and request_timestamp {request_timestamp}: {len(data_points)}")
-    else:
-        print(f"No data points found for patient {patient.name} (ID: {patient.id}) at timestamp {request_timestamp}.")
+    with Session(db.engine) as session:
+        print(f"Querying for patient_id={patient_id} and request_timestamp={request_timestamp}")
+        
+        patient = session.get(Patient, patient_id)
+        if not patient:
+            print(f"No patient found with ID {patient_id}.")
+            return
+
+        # Build the query
+        query = (
+            session.query(DeviceData)
+            .filter(DeviceData.patient_id == patient_id)
+            .filter(
+                DeviceData.request_timestamp.between(
+                    request_timestamp,
+                    request_timestamp + timedelta(seconds=1)
+                )
+            )
+        )
+        
+        # Log the query before executing `.all()`
+        print(query.statement.compile(dialect=sqlite.dialect()))  # Logs the SQL query
+
+        # Execute the query
+        data_points = query.all()
+
+        if data_points:
+            print(f"Length of data_points for patient {patient.name} (ID: {patient.id}) and request_timestamp {request_timestamp}: {len(data_points)}")
+        else:
+            print(f"No data points found for patient {patient.name} (ID: {patient.id}) at timestamp {request_timestamp}.")
 
 def list_all_patients():
     """
@@ -281,7 +295,6 @@ def list_all_patients():
             print(f"{p.id:<10} {p.name:<25} {dob_str:<12} {p.gender:<10} {provider_email:<30}")
     else:
         print("No patients found in the database.")
-
 
 
 if __name__ == '__main__':
@@ -358,45 +371,11 @@ if __name__ == '__main__':
             find_patient_data_by_id_and_timestamp(patient_id, request_timestamp)
         else:
             parser.print_help()
+
+
 # ======================================
 # Usage Guide for `website` Module
 # ======================================
-
-# Command Prompt (In Project Root):
-# To interact with the database via Flask shell:
-# flask --app website shell
-# This allows you to use the following functions to manually add or query database entries.
-
-# Example Usage in Flask Shell:
-
-# 1. Add a User
-# from website.db_utils import add_user
-# add_user(email="test@example.com", password="password123", first_name="Test")
-
-# 2. Add a Device
-# First, find the `user_id` using the `list_users()` function.
-# Then:
-# from website.db_utils import add_device
-# add_device(name="Knee Tracker", device_type="Physical Therapy Device", serial_number="SN123456", user_id=1)
-
-# 3. Add Device Data
-# This example assumes you have a device with `serial_number='SN123456'`:
-# from website.db_utils import add_device_data
-# add_device_data(
-#     serial_number='SN123456',
-#     time=2138,  # Time sent from the Arduino
-#     ax1=0.01, ay1=0.02, az1=0.98, gx1=1.5, gy1=-0.5, gz1=0.0,
-#     ax2=0.03, ay2=0.04, az2=1.02, gx2=1.2, gy2=-0.3, gz2=0.1,
-#     ax3=0.05, ay3=0.06, az3=1.05, gx3=1.0, gy3=-0.2, gz3=0.2
-# )
-
-# 4. Find a Patient by ID
-# from website.db_utils import find_patient_by_id
-# find_patient_by_id(5)  # Replace 5 with the desired patient ID.
-
-# 5. Find a Patient by Name
-# from website.db_utils import find_patient_by_name
-# find_patient_by_name("John")  # Lists all patients whose name includes "John".
 
 # ======================================
 # Example CLI Commands

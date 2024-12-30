@@ -66,7 +66,8 @@ class DeviceData(db.Model):
         nullable=True
     )
 
-    request_timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
+    # request_timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
+    request_timestamp = db.Column(db.DateTime(timezone=True))
     session_id = db.Column(db.Integer, nullable=True, unique=True)
     test_name = db.Column(db.String(255), nullable=True) # e.g. "depth jump", etc
     time = db.Column(db.Float, nullable=False)
