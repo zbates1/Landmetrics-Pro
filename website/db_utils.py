@@ -281,6 +281,8 @@ def find_patient_data_by_id_and_timestamp(patient_id, request_timestamp):
         else:
             print(f"No data points found for patient {patient.name} (ID: {patient.id}) at timestamp {request_timestamp}.")
 
+        return data_points
+    
 def list_all_patients():
     """
     Lists all patients in the database with their ID, name, and provider's email.

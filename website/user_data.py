@@ -14,11 +14,11 @@ import json
 
 from flask_wtf.csrf import generate_csrf
 
-# This new import will be used instead of the old function, 'get device data below'
+# Use your new function from db_utils
 try:
-    from .db_utils import find_data_by_patient_id
+    from .db_utils import find_patient_data_by_id_and_timestamp
 except ImportError:
-    from website.db_utils import find_data_by_patient_id  # Absolute import for script execution
+    from website.db_utils import find_patient_data_by_id_and_timestamp  # Absolute import for script execution
 
 
 # Initialize the blueprint
@@ -27,93 +27,51 @@ data_view = Blueprint('data_view', __name__)
 # Set up logging
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-formatter = logging.Formatter(
-    '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
-)
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 
-def get_patient_data(patient_id, request_timestamp=None):
+def build_data_dict(data_points):
     """
-    Retrieve data for a specific device and request_timestamp belonging to the current user.
-    Updated to reflect the changed DeviceData schema.
+    Given a list of DeviceData points, build a dictionary with
+    timestamps and sensor arrays for Chart.js or other visualization.
     """
-    try:
-        # Ensure the device belongs to the current user
-        # device = Device.query.filter_by(id=device_id, user_id=current_user.id).first()
-        # if not device:
-        #     logger.warning(f"Device ID {device_id} not found for user {current_user.id}")
-        #     return {}
-
-        # Build the query for data points
-        # query = DeviceData.query.filter_by(device_id=device_id) # this is outdated, I need to query for patient_id
-
-        patient = Patient.query.filter_by(id=patient_id, user_id=current_user.id).first()
-        if not patient:
-            logger.warning(f"Patient ID {patient_id} not found for user {current_user.id}")
-            return {}
-        query = DeviceData.query.filter_by(patient_id=patient_id)
-
-        if request_timestamp:
-            # Note: request_timestamp should be a datetime if stored as a DateTime.
-            # If you're passing it as a string from the template, you may need to convert it.
-            # If it's stored as a DateTime, parse the string into a datetime object.
-            # Otherwise, if it's stored as-is, adjust accordingly.
-            # Assuming request_timestamp is a string and matches the database format:
-            try:
-                rt_dt = datetime.strptime(request_timestamp, '%Y-%m-%d %H:%M:%S')
-                query = query.filter_by(request_timestamp=rt_dt)
-            except ValueError:
-                logger.warning(f"Invalid request_timestamp format: {request_timestamp}")
-                return {}
-
-        print(f'Get Patient Data fn: Querying for Patient ID {patient_id} and request_timestamp {request_timestamp}')
-        data_points = query.order_by(DeviceData.time).all()
-        print(f'Get Patient Data fn: Found {len(data_points)} data points for Patient ID {patient_id} and request_timestamp {request_timestamp}')
-        # print(f'\n\nData points have the following fields: \n{data_points[0].__dict__.keys()}\n\n')
-
-        if not data_points:
-            logger.warning(f"No data points found for Patient ID {patient_id} and request_timestamp {request_timestamp}")
-            return {}
-
-        # Prepare data structure based on the updated DeviceData fields
-        data_dict = {
-            'timestamps': [],
-            'request_timestamp': [],
-            'test_name': [],
-            'ax1': [], 'ay1': [], 'az1': [], 'ox1': [], 'oy1': [], 'oz1': [], 'ow1': [],
-            'ax2': [], 'ay2': [], 'az2': [], 'ox2': [], 'oy2': [], 'oz2': [], 'ow2': []
-        }
-
-        for data_point in data_points:
-            # Convert data_point.time from float to datetime string
-            timestamp_str = datetime.fromtimestamp(data_point.time).strftime('%Y-%m-%d %H:%M:%S')
-            data_dict['timestamps'].append(timestamp_str)
-            data_dict['request_timestamp'].append(data_point.request_timestamp)
-            data_dict['test_name'].append(data_point.test_name)
-            data_dict['ax1'].append(data_point.ax1)
-            data_dict['ay1'].append(data_point.ay1)
-            data_dict['az1'].append(data_point.az1)
-            data_dict['ox1'].append(data_point.ox1)
-            data_dict['oy1'].append(data_point.oy1)
-            data_dict['oz1'].append(data_point.oz1)
-            data_dict['ow1'].append(data_point.ow1)
-            data_dict['ax2'].append(data_point.ax2)
-            data_dict['ay2'].append(data_point.ay2)
-            data_dict['az2'].append(data_point.az2)
-            data_dict['ox2'].append(data_point.ox2)
-            data_dict['oy2'].append(data_point.oy2)
-            data_dict['oz2'].append(data_point.oz2)
-            data_dict['ow2'].append(data_point.ow2)
-
-        return data_dict
-
-    except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
-        flash("An error occurred while retrieving device data.", category='error')
+    if not data_points:
         return {}
+
+    data_dict = {
+        'timestamps': [],
+        'request_timestamp': [],
+        'test_name': [],
+        'ax1': [], 'ay1': [], 'az1': [], 'ox1': [], 'oy1': [], 'oz1': [], 'ow1': [],
+        'ax2': [], 'ay2': [], 'az2': [], 'ox2': [], 'oy2': [], 'oz2': [], 'ow2': []
+    }
+
+    for dp in data_points:
+        # Convert dp.time (float) to a readable string
+        timestamp_str = datetime.fromtimestamp(dp.time).strftime('%Y-%m-%d %H:%M:%S')
+        data_dict['timestamps'].append(timestamp_str)
+        data_dict['request_timestamp'].append(dp.request_timestamp)
+        data_dict['test_name'].append(dp.test_name)
+        data_dict['ax1'].append(dp.ax1)
+        data_dict['ay1'].append(dp.ay1)
+        data_dict['az1'].append(dp.az1)
+        data_dict['ox1'].append(dp.ox1)
+        data_dict['oy1'].append(dp.oy1)
+        data_dict['oz1'].append(dp.oz1)
+        data_dict['ow1'].append(dp.ow1)
+        data_dict['ax2'].append(dp.ax2)
+        data_dict['ay2'].append(dp.ay2)
+        data_dict['az2'].append(dp.az2)
+        data_dict['ox2'].append(dp.ox2)
+        data_dict['oy2'].append(dp.oy2)
+        data_dict['oz2'].append(dp.oz2)
+        data_dict['ow2'].append(dp.ow2)
+
+    return data_dict
+
 
 @data_view.route('/add_patient', methods=['POST'])
 @login_required
@@ -153,37 +111,40 @@ def add_patient():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
     
+
 @data_view.route('/view_tests', methods=['GET'])
 @login_required
 def view_tests():
     patient_id = request.args.get('patient_id', type=int)
     # Logic to display past health tests for this patient
-    # e.g., tests = HealthTest.query.filter_by(patient_id=patient_id).all()
-    # return render_template('view_tests.html', tests=tests, patient_id=patient_id)
     return "View tests page placeholder"
+
 
 @data_view.route('/new_test', methods=['GET'])
 @login_required
 def new_test():
     patient_id = request.args.get('patient_id', type=int)
     # Logic to initiate a new test for this patient
-    # return render_template('new_test.html', patient_id=patient_id)
     return "New test page placeholder"
-
 
 
 @data_view.route('/user_data', methods=['GET'])
 @login_required
 def user_data():
+    """
+    Main route for visualizing patient data.
+    1. Select or create a patient (via the patient modal).
+    2. (Optionally) select a specific request_timestamp (test session).
+    3. Data is retrieved from find_patient_data_by_id_and_timestamp,
+       then built into a dictionary (device_data) for the template.
+    """
     try:
         # Get all patients for the current user
         patients = Patient.query.filter_by(user_id=current_user.id).all()
 
-        # Get selected_patient_id from query params
+        # Get the currently selected patient
         selected_patient_id = request.args.get('patient_id', type=int)
         current_patient_name = None
-
-        # If patient is selected, fetch their name
         if selected_patient_id:
             patient = Patient.query.filter_by(id=selected_patient_id, user_id=current_user.id).first()
             if not patient:
@@ -191,19 +152,20 @@ def user_data():
                 return redirect(url_for('data_view.user_data'))
             current_patient_name = patient.name
 
-        # Get the list of devices for the current user
+        # (Optional) You still have references to "devices" in your template
         devices_query = Device.query.filter_by(user_id=current_user.id).all()
-        devices = [{'id': device.id, 'name': device.name} for device in devices_query]
+        devices = [{'id': dev.id, 'name': dev.name} for dev in devices_query]
 
-        # Get the selected device ID and request timestamp from the query parameters
+        # We read the device_id param if your template still references it
         selected_device_id = request.args.get('device_id', type=int)
         selected_request_timestamp = request.args.get('request_timestamp')
 
         device_data = {}
         request_timestamps = []
 
+        # If a patient is selected, gather their distinct request_timestamps
         if selected_patient_id:
-            # Gather unique request_timestamps for this patient
+            # Retrieve all distinct timestamps from DeviceData for this patient
             request_timestamps_query = (
                 db.session.query(DeviceData.request_timestamp)
                 .filter_by(patient_id=selected_patient_id)
@@ -211,24 +173,39 @@ def user_data():
                 .order_by(DeviceData.request_timestamp)
                 .all()
             )
+            # Convert them to string if they're actually datetime objects
             request_timestamps = [
                 rt[0].strftime('%Y-%m-%d %H:%M:%S')
                 for rt in request_timestamps_query
                 if rt[0]
             ]
 
-            # Retrieve data for the selected patient + timestamp
-            print(f"\n User data fn: Selected patient ID: {selected_patient_id} and request timestamp: {selected_request_timestamp}\n\n")
-            data_dict = get_patient_data(selected_patient_id, selected_request_timestamp)
+            # -----------------------------------
+            # Use your new DB utility function
+            # -----------------------------------
+            data_points = None
+            if selected_request_timestamp:
+                data_points = find_patient_data_by_id_and_timestamp(
+                    selected_patient_id,
+                    selected_request_timestamp
+                )
+
+            # print(f'data_points: {data_points}')
+            
+            # Build a data dict from data_points
+            data_dict = build_data_dict(data_points) if data_points else {}
 
             if data_dict:
-                print(f"\n\n User data fn: Data dict has the following keys: \n{data_dict.keys()}\n\n")
-                # If you're still using 'selected_device_id', store under that key:
-                device_data[selected_device_id] = data_dict
+                # Key by selected_device_id (if you still want to store it this way)
+                device_data[selected_patient_id] = data_dict
+                if selected_patient_id in device_data:
+                    print(f"Device data exists for patient ID: {selected_patient_id}")
+                else:
+                    print(f"Device data does not exist for patient ID: {selected_patient_id}")
             else:
-                # Instead of redirecting again, we simply flash a warning
-                # and give an empty dataset so we don't cause an infinite loop.
-                flash("No data available for the selected patient and session.", category='error')
+                # If no data returned, avoid redirect loops — just flash & pass empty dict
+                if selected_request_timestamp:
+                    flash("No data available for the selected patient and session.", category='error')
                 device_data[selected_device_id] = {}
 
         return render_template(

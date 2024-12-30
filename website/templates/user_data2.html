@@ -50,7 +50,7 @@
     {% endif %}
 
     <!-- Chart Type Selection -->
-    {% if selected_patient_id and device_data[selected_patient_id] %}
+    {% if selected_patient_id %}
       <div class="row mb-4">
           <div class="col-md-6 mx-auto">
               <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
@@ -63,7 +63,7 @@
     {% endif %}
 
     <!-- Chart Area -->
-    {% if selected_patient_id and device_data[selected_patient_id] %}
+    {% if selected_patient_id %}
       <div class="row">
           <div class="col-md-12">
               <canvas id="dataChart" style="max-height: 500px;"></canvas>
