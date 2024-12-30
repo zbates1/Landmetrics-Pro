@@ -16,6 +16,7 @@ except ImportError:
 
 from sqlalchemy import func
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 
 # Add a new user
@@ -234,14 +235,37 @@ def find_patient_data_by_id_and_timestamp(patient_id, request_timestamp):
     """
     Finds data points (DeviceData) for the given patient ID and request_timestamp.
     """
-    patient = Patient.query.get(patient_id)
+    try:
+        patient_id = int(patient_id)
+    except ValueError:
+        print(f"Invalid patient ID: {patient_id}. Must be an integer.")
+        return
+    
+    try:
+        request_timestamp = datetime.strptime(request_timestamp, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        print(f"Invalid timestamp format: {request_timestamp}. Use 'YYYY-MM-DD HH:MM:SS'.")
+        return
+    
+    # Query the database
+    session = Session(db.engine)  # Ensure `db` is your SQLAlchemy instance
+    patient = session.get(Patient, patient_id)  # Use `Session.get()` per SQLAlchemy 2.0+
     if not patient:
         print(f"No patient found with ID {patient_id}.")
         return
     
-    data_points = patient.data_points.filter_by(request_timestamp=request_timestamp).all()
+    # Query related DeviceData records
+    data_points = (
+        session.query(DeviceData)
+        .filter_by(patient_id=patient_id)
+        .filter(DeviceData.request_timestamp == request_timestamp)
+        .all()
+    )
+    
     if data_points:
         print(f"Length of data_points for patient {patient.name} (ID: {patient.id}) and request_timestamp {request_timestamp}: {len(data_points)}")
+    else:
+        print(f"No data points found for patient {patient.name} (ID: {patient.id}) at timestamp {request_timestamp}.")
 
 def list_all_patients():
     """
@@ -292,7 +316,12 @@ if __name__ == '__main__':
     parser.add_argument('--find-tests-by-patient-id', type=int, help="Find tests by patient ID")
     parser.add_argument('--find-unique-request-timestamps-by-patient-id', type=int, help="Find unique request timestamps by patient ID")
     parser.add_argument('--find-data-by-patient-id', type=int, help="Find data by patient ID")
-    parser.add_argument('--find-patient-data-by-id-and-timestamp', type=int, help="Find patient data by patient ID and request timestamp")
+    parser.add_argument(
+        '--find-patient-data-by-id-and-timestamp',
+        nargs=2,  # Accept exactly two arguments
+        metavar=('PATIENT_ID', 'REQUEST_TIMESTAMP'),
+        help="Find patient data by patient ID and request timestamp"
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -325,7 +354,8 @@ if __name__ == '__main__':
         elif args.find_data_by_patient_id:
             find_data_by_patient_id(args.find_data_by_patient_id)
         elif args.find_patient_data_by_id_and_timestamp:
-            find_patient_data_by_id_and_timestamp(args.find_patient_data_by_id_and_timestamp)
+            patient_id, request_timestamp = args.find_patient_data_by_id_and_timestamp
+            find_patient_data_by_id_and_timestamp(patient_id, request_timestamp)
         else:
             parser.print_help()
 # ======================================
@@ -388,5 +418,4 @@ if __name__ == '__main__':
 # python website/db_utils.py --find-user-by-email 'user@example.com'
 
 # Find patient data by ID and timestamp:
-# python website/db_utils.py --find-patient-data-by-id-and-timestamp 2 2024-12-24 03:20:48
-# python -m website.db_utils --find-patient-data-by-id-and-timestamp 2 2024-12-24 03:20:48
+# python -m website.db_utils --find-patient-data-by-id-and-timestamp 1 "2024-12-24 03:20:48"
