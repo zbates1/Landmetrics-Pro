@@ -12,6 +12,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     print(f'Entering Landmetrics-Pro development configuration')
+    API_SECRET_KEY = os.environ.get('API_SECRET_KEY', 'YOUR_SUPER_SECRET_KEY')
     DEBUG = True
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
     postgress_password = os.getenv('POSTGRESS_PASSWORD')
@@ -24,6 +25,7 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config): # tag: set up ENV variables in Heroku GUI or in Procfile
     print(f'Entering Landmetrics-Pro production configuration')
+    API_SECRET_KEY = os.environ.get('API_SECRET_KEY', 'YOUR_SUPER_SECRET_KEY')
     DEBUG = False
     if os.getenv('DATABASE_URL'):
 

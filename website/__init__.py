@@ -13,6 +13,8 @@ from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from sqlalchemy import MetaData # needed to make migrations work
 from werkzeug.security import generate_password_hash
 from .config import Config  # Base configuration class
@@ -87,7 +89,7 @@ def initialize_extensions(app):
     login_manager.init_app(app)
     admin.init_app(app)
     migrate = Migrate(app,db,render_as_batch=True)
-
+    limiter = Limiter(app, default_limits=["100 per minute"])
 
 def register_blueprints(app):
     """
@@ -128,11 +130,12 @@ def setup_admin_interface():
     """
     Set up the Flask-Admin interface.
     """
-    from .models import User, Device, DeviceData
+    from .models import User, Device, DeviceData, Patient
 
     admin.add_view(ModelView(User, db.session))
     admin.add_view(ModelView(Device, db.session))
     admin.add_view(ModelView(DeviceData, db.session))
+    admin.add_view(ModelView(Patient, db.session))
 
 def create_database(app):
     """

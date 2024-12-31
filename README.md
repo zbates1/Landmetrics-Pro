@@ -125,7 +125,7 @@ You will need to switch to Git Bash to use this command on Windows, you could sw
 
 ### Local Development CURL:
 bash
-curl -X POST http://127.0.0.1:5000/api/data -H "Content-Type: application/json" -d @cleaned_data.json
+curl -X POST http://127.0.0.1:5000/api/data -H "Content-Type: application/json" -H "X-API-Key: SECRETKEY" -d @cleaned_data.json
 
 ### Now, how to do it in production Heroku Postgres DB
 bash

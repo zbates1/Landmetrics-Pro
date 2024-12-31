@@ -1,11 +1,15 @@
 import logging
-from flask import Blueprint, render_template, request, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, flash, jsonify, current_app, abort
 from flask_login import login_required, current_user
-from .models import Device, DeviceData
+from .models import Device, DeviceData, Patient
 from . import db, csrf
 import json
 from datetime import datetime
 import random
+from functools import wraps
+import os
+from dotenv import load_dotenv
+
 
 views = Blueprint('views', __name__)
 
@@ -23,7 +27,6 @@ handler.setFormatter(formatter)
 
 # Add the handler to the logger
 logger.addHandler(handler)
-
 
 @views.route('/', methods=['GET', 'POST'])
 def home():
@@ -44,9 +47,28 @@ def home():
 
     return render_template("home.html", csrf=csrf, user=current_user, DATABASE_URL=DATABASE_URL)
 
+
+# ==========================
+# API ROUTES LOAD API KEY
+# ==========================
+
+load_dotenv()  # Load environment variables from .env file if present
+API_SECRET_KEY = os.environ.get('API_SECRET_KEY', 'YOUR_SUPER_SECRET_KEY')
+
+def require_api_key(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        provided_key = request.headers.get('X-API-Key')
+        if not provided_key or provided_key != API_SECRET_KEY:
+            abort(403, description="Forbidden: invalid API key")
+        return func(*args, **kwargs)
+    return wrapper
+
 # Taking data from the Arduino ESP32
 @views.route('/api/data', methods=['POST'])
 @csrf.exempt  # Only if intentionally exempt from CSRF checks
+@require_api_key
+# @limiter.limit("10/minute")  # e.g., override to 10 requests/min for this route -> tag: not working as I don't know how to import limiter from __init__.py, but it should apply the default rate limit to every route
 def receive_data():
     """
     Receive JSON data for a device and a patient,

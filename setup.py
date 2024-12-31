@@ -12,6 +12,7 @@ setup(
         "Flask-Migrate>=4.0.7",
         "Flask-SQLAlchemy>=3.1.1",
         "Flask-WTF>=1.2.1",
+        "Flask-Limiter>=3.9.2",
         "numpy>=2.2.1",
         "pandas>=2.2.3",
         "python-dotenv>=1.0.1",

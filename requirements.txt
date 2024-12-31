@@ -4,6 +4,7 @@ Flask-WTF
 flask-login
 flask-admin
 Flask-Migrate
+Flask-Limiter
 python-dotenv
 gunicorn
 psycopg2
