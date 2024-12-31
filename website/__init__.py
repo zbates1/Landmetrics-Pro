@@ -12,6 +12,10 @@ from flask_wtf import CSRFProtect
 from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+
+from flask_basicauth import BasicAuth
+from .admin_views import MyAdminIndexView  # Import your custom admin views if they're defined separately
+
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -30,13 +34,12 @@ convention = {
 }
 
 metadata = MetaData(naming_convention=convention)
-db = SQLAlchemy(metadata=metadata)
 
 # Initialize extensions
-# db = SQLAlchemy()
 csrf = CSRFProtect()
 login_manager = LoginManager()
-admin = Admin()
+db = SQLAlchemy(metadata=metadata)
+
 
 def create_app(config_class):
     """
@@ -51,16 +54,8 @@ def create_app(config_class):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # tag: if this doesn't work for Heroku, I will probably need to implement one of my old solutions like this: 
-    # Version 2 Solution
-    # app.config['DATABASE_URL'] = Config.uri
-    # app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
-
     # Set up logging
     setup_logging(app)
-
-    # Initialize extensions
-    initialize_extensions(app)
 
     # Register blueprints
     register_blueprints(app)
@@ -68,15 +63,28 @@ def create_app(config_class):
     # Configure login manager
     configure_login_manager()
 
-    # Set up Flask-Admin
-    setup_admin_interface()
 
     # Create database tables
     create_database(app)
 
+    # Initialize basic authentication
+    basic_auth = BasicAuth(app)
+    admin = Admin(app, index_view=MyAdminIndexView(basic_auth), name='MySite Admin', template_mode='bootstrap3')
+    app.config['BASIC_AUTH_USERNAME'] = 'admin'
+    app.config['BASIC_AUTH_PASSWORD'] = 'secret'
+    app.config['BASIC_AUTH_FORCE'] = False
+
+    # Initialize extensions and setup admin interface
+    initialize_extensions(app, admin)
+    setup_admin_interface(admin)
+
+
+    # Initialize CSRF protection
+    csrf.init_app(app)
+
     return app
 
-def initialize_extensions(app):
+def initialize_extensions(app,admin):
     """
     Initialize Flask extensions.
 
@@ -87,7 +95,7 @@ def initialize_extensions(app):
     db.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
-    admin.init_app(app)
+    # admin.init_app(app)
     migrate = Migrate(app,db,render_as_batch=True)
     limiter = Limiter(app, default_limits=["100 per minute"])
 
@@ -126,7 +134,7 @@ def configure_login_manager():
         from .models import User
         return User.query.get(int(user_id))
 
-def setup_admin_interface():
+def setup_admin_interface(admin):
     """
     Set up the Flask-Admin interface.
     """

@@ -5,6 +5,7 @@ flask-login
 flask-admin
 Flask-Migrate
 Flask-Limiter
+Flask-BasicAuth
 python-dotenv
 gunicorn
 psycopg2
