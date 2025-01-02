@@ -19,58 +19,145 @@
     
     <input type="hidden" id="csrf_token" value="{{ csrf_token() or '' }}">
     
-    <!-- Patient Actions -->
-    <div class="text-center mb-5">
-        <button class="btn btn-primary" id="viewTestsBtn">View Past Health Tests</button>
-        <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
-    </div>
+    <div class="row">
 
-    <!-- Request Timestamp Selection -->
-    {% if selected_patient_id %}
-      <div class="row mb-4">
-          <div class="col-md-6 mx-auto">
-              <label for="requestTimestampSelect" class="form-label">
-                Select a Session (Request Timestamp)
-              </label>
-              <select id="requestTimestampSelect" class="form-select">
-                  <!-- "All Sessions" option -->
-                  <option value="" {% if not selected_request_timestamp %}selected{% endif %}>
-                      All Sessions
-                  </option>
-                  {% for rt in request_timestamps %}
-                      <option value="{{ rt }}"
-                          {% if rt == selected_request_timestamp %}selected{% endif %}
-                      >
-                        {{ rt }}
-                      </option>
-                  {% endfor %}
-              </select>
-          </div>
-      </div>
-    {% endif %}
+        <!-- Setting up div for lefthand column to hold buttons, dropdowns, and graph -->
+        <div class="col-md-8">
+            <!-- Patient Actions -->
+            <div class="text-center mb-5">
+                <button class="btn btn-primary" id="viewTestsBtn">View Past Health Tests</button>
+                <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
+            </div>
 
-    <!-- Chart Type Selection -->
-    {% if selected_patient_id %}
-      <div class="row mb-4">
-          <div class="col-md-6 mx-auto">
-              <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
-              <select id="chartTypeSelect" class="form-select">
-                  <option value="line" selected>Line Chart</option>
-                  <!-- Add more chart types if desired -->
-              </select>
-          </div>
-      </div>
-    {% endif %}
+            <!-- Request Timestamp Selection -->
+            {% if selected_patient_id %}
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <label for="requestTimestampSelect" class="form-label">
+                        Select a Session (Request Timestamp)
+                    </label>
+                    <select id="requestTimestampSelect" class="form-select">
+                        <!-- "All Sessions" option -->
+                        <option value="" {% if not selected_request_timestamp %}selected{% endif %}>
+                            All Sessions
+                        </option>
+                        {% for rt in request_timestamps %}
+                            <option value="{{ rt }}"
+                                {% if rt == selected_request_timestamp %}selected{% endif %}
+                            >
+                                {{ rt }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
 
-    <!-- Chart Area -->
-    {% if selected_patient_id %}
-      <div class="row">
-          <div class="col-md-12">
-              <canvas id="dataChart" style="max-height: 500px;"></canvas>
-          </div>
-      </div>
-    {% endif %}
-</div>
+            <!-- Chart Type Selection -->
+            {% if selected_patient_id %}
+            <div class="row mb-4">
+                <div class="col-md-6 mx-auto">
+                    <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
+                    <select id="chartTypeSelect" class="form-select">
+                        <option value="line" selected>Line Chart</option>
+                        <!-- Add more chart types if desired -->
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Chart Area -->
+            {% if selected_patient_id %}
+            <div class="row">
+                <div class="col-md-12">
+                    <canvas id="dataChart" style="max-height: 500px;"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        
+        <!-- Right Column for Patient Notes -->
+        <div class="col-md-4">
+            <h3 class="mb-3">Patient Notes</h3>
+            {% if selected_patient_id %}
+                <form method="POST" class="mb-3" id="notesForm">
+                    <!-- Put the CSRF token in a hidden input so it is part of the form data -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <textarea name="note" class="form-control mb-2" placeholder="Enter a note..." required></textarea>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </form>
+
+                <!-- Give the notes list an ID so we can append to it in JS -->
+                <ul class="list-group" id="notesList">
+                    {% for note in notes %}
+                        <li class="list-group-item">
+                            <strong>{{ note.date_created.strftime('%Y-%m-%d %H:%M:%S') }}</strong>: {{ note.note }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Please select a patient to view and add notes.</p>
+            {% endif %}
+        </div>
+    </div> <!-- .row -->
+</div> <!-- .container -->
+
+<!-- Script to handle CSRF for notes -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('notesForm');
+    const notesList = document.getElementById('notesList');  // our <ul> element
+
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevent normal form submission
+            const formData = new FormData(form);
+
+            fetch("{{ url_for('data_view.user_data', patient_id=selected_patient_id if selected_patient_id else None) }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    // Send the CSRF token from the hidden input via a custom header
+                    "X-CSRFToken": formData.get('csrf_token'),
+                },
+                credentials: 'same-origin'  // Ensures cookies (thus session) are sent
+            })
+            .then(response => {
+                if (response.ok) {
+                    // We expect a JSON response from the backend
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log('Success:', data);
+                
+                if (data.status === 'success' && data.new_note) {
+                    // Create a new <li> element with the fresh note
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item');
+                    li.innerHTML = `
+                        <strong>${data.new_note.date_created}</strong>: ${data.new_note.note}
+                    `;
+                    // Insert the new note at the top (or use append() to put it at the bottom)
+                    notesList.prepend(li);
+
+                    // Clear the textarea
+                    form.reset();
+                } else {
+                    console.error('Error adding note:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+});
+</script>
+
 
 <!-- Include your modals (patient selection & new test) -->
 {% include "_patient_selection_modal.html" %}
@@ -365,3 +452,4 @@
     });
 </script>
 {% endblock %}
+

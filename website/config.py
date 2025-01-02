@@ -14,13 +14,12 @@ class DevelopmentConfig(Config):
     print(f'Entering Landmetrics-Pro development configuration')
     API_SECRET_KEY = os.environ.get('API_SECRET_KEY', 'YOUR_SUPER_SECRET_KEY')
     DEBUG = True
-    DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
+    # DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database.db')
     postgress_password = os.getenv('POSTGRESS_PASSWORD')
-    # DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql+psycopg2://postgres:Karlevyzane1@localhost:5432/postgres')
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql+psycopg2://postgres:Karlevyzane1@localhost:5432/postgres')
     # GET BATABASE URL FROM ENVIRONMENT, IF IT EXISTS, OTHERWISE USE DEFAULT, DYNAMICALLY ADDING IN PASSWORD
     # DATABASE_URL = os.getenv('DATABASE_URL', f'postgresql+psycopg2://postgres:{postgress_password}@localhost:5432/postgres')
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
-    # Add any other development-specific configurations
 
 
 class ProductionConfig(Config): # tag: set up ENV variables in Heroku GUI or in Procfile

@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
-from .models import User, Device, DeviceData, Patient
+from .models import User, Device, DeviceData, Patient, PatientNotes
 from datetime import datetime
 import json
 
@@ -128,44 +128,74 @@ def new_test():
     return "New test page placeholder"
 
 
-@data_view.route('/user_data', methods=['GET'])
+@data_view.route('/user_data', methods=['GET', 'POST'])
 @login_required
 def user_data():
     """
     Main route for visualizing patient data.
-    1. Select or create a patient (via the patient modal).
-    2. (Optionally) select a specific request_timestamp (test session).
-    3. Data is retrieved from find_patient_data_by_id_and_timestamp,
-       then built into a dictionary (device_data) for the template.
     """
     try:
         # Get all patients for the current user
         patients = Patient.query.filter_by(user_id=current_user.id).all()
 
+        # Initialize notes to an empty list
+        notes = []
+
         # Get the currently selected patient
         selected_patient_id = request.args.get('patient_id', type=int)
         current_patient_name = None
         if selected_patient_id:
-            patient = Patient.query.filter_by(id=selected_patient_id, user_id=current_user.id).first()
+            patient = Patient.query.filter_by(
+                id=selected_patient_id,
+                user_id=current_user.id
+            ).first()
+
+            # Load existing notes (descending by date_created)
+            notes = PatientNotes.query.filter_by(patient_id=selected_patient_id)\
+                                      .order_by(PatientNotes.date_created.desc())\
+                                      .all()
+
             if not patient:
                 flash("Selected patient not found or does not belong to you.", category='error')
                 return redirect(url_for('data_view.user_data'))
             current_patient_name = patient.name
 
-        # (Optional) You still have references to "devices" in your template
+        # ===============================
+        # Handle POST => Add Patient Note
+        # ===============================
+        if request.method == 'POST' and request.form.get('note'):
+            note_data = request.form.get('note')
+            new_note = PatientNotes(
+                note=note_data,
+                user_id=current_user.id,
+                patient_id=selected_patient_id
+            )
+            db.session.add(new_note)
+            db.session.commit()
+
+            # Return JSON to let our JavaScript add the new note without refreshing
+            return jsonify({
+                'status': 'success',
+                'message': 'Note added successfully',
+                'new_note': {
+                    'date_created': new_note.date_created.strftime('%Y-%m-%d %H:%M:%S'),
+                    'note': new_note.note
+                }
+            })
+
+        # (Optional) Device logic you already have
         devices_query = Device.query.filter_by(user_id=current_user.id).all()
         devices = [{'id': dev.id, 'name': dev.name} for dev in devices_query]
 
-        # We read the device_id param if your template still references it
         selected_device_id = request.args.get('device_id', type=int)
         selected_request_timestamp = request.args.get('request_timestamp')
 
         device_data = {}
         request_timestamps = []
 
-        # If a patient is selected, gather their distinct request_timestamps
+        # If a patient is selected, gather timestamps + data
         if selected_patient_id:
-            # Retrieve all distinct timestamps from DeviceData for this patient
+            # Distinct timestamps
             request_timestamps_query = (
                 db.session.query(DeviceData.request_timestamp)
                 .filter_by(patient_id=selected_patient_id)
@@ -173,16 +203,13 @@ def user_data():
                 .order_by(DeviceData.request_timestamp)
                 .all()
             )
-            # Convert them to string if they're actually datetime objects
             request_timestamps = [
                 rt[0].strftime('%Y-%m-%d %H:%M:%S')
                 for rt in request_timestamps_query
                 if rt[0]
             ]
 
-            # -----------------------------------
-            # Use your new DB utility function
-            # -----------------------------------
+            # Get DeviceData for the selected request_timestamp (if any)
             data_points = None
             if selected_request_timestamp:
                 data_points = find_patient_data_by_id_and_timestamp(
@@ -190,24 +217,19 @@ def user_data():
                     selected_request_timestamp
                 )
 
-            # print(f'data_points: {data_points}')
-            
             # Build a data dict from data_points
             data_dict = build_data_dict(data_points) if data_points else {}
 
             if data_dict:
-                # Key by selected_device_id (if you still want to store it this way)
+                # Key by patient_id (or device_id) as needed
                 device_data[selected_patient_id] = data_dict
-                if selected_patient_id in device_data:
-                    print(f"Device data exists for patient ID: {selected_patient_id}")
-                else:
-                    print(f"Device data does not exist for patient ID: {selected_patient_id}")
             else:
-                # If no data returned, avoid redirect loops — just flash & pass empty dict
+                # If no data returned, flash an error if request_timestamp was specified
                 if selected_request_timestamp:
                     flash("No data available for the selected patient and session.", category='error')
-                device_data[selected_device_id] = {}
+                device_data[selected_patient_id] = {}
 
+        # Normal GET => Render template
         return render_template(
             "user_data2.html",
             devices=devices,
@@ -219,7 +241,8 @@ def user_data():
             patients=patients,
             selected_patient_id=selected_patient_id if selected_patient_id else None,
             current_patient_name=current_patient_name,
-            csrf=generate_csrf()  # for the add_patient endpoint if needed
+            csrf=generate_csrf(),  # for the add_patient endpoint if needed
+            notes=notes
         )
 
     except SQLAlchemyError as e:

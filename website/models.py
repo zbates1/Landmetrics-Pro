@@ -36,6 +36,17 @@ class Patient(db.Model):
 
     def __repr__(self):
         return f'<Patient {self.name} (ID: {self.id})>'
+    
+class PatientNotes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    note = db.Column(db.String(10000), nullable=True)
+    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<PatientNotes {self.id} - Patient {self.patient_id}>'
+
 
 class Device(db.Model):
     id = db.Column(db.Integer, primary_key=True)

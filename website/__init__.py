@@ -82,11 +82,12 @@ def configure_login_manager(app):
         return User.query.get(int(user_id))
 
 def setup_admin_interface(admin):
-    from .models import User, Device, DeviceData, Patient
+    from .models import User, Device, DeviceData, Patient, PatientNotes
     admin.add_view(ModelView(User, db.session))
     admin.add_view(ModelView(Device, db.session))
     admin.add_view(ModelView(DeviceData, db.session))
     admin.add_view(ModelView(Patient, db.session))
+    admin.add_view(ModelView(PatientNotes, db.session))
 
 def create_database(app):
     with app.app_context():
