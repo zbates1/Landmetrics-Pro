@@ -254,3 +254,21 @@ def user_data():
         logger.error(f"An unexpected error occurred: {e}", exc_info=True)
         flash("An unexpected error occurred.", category='error')
         return redirect(url_for('views.home'))
+
+@data_view.route('/delete_note/<int:note_id>', methods=['POST'])
+@login_required
+def delete_note(note_id):
+    """
+    Deletes the note with the given note_id if it belongs to the current user.
+    Returns JSON with success/failure message.
+    """
+    # Find the note in the database
+    note_to_delete = PatientNotes.query.filter_by(id=note_id, user_id=current_user.id).first()
+    if not note_to_delete:
+        return jsonify({'status': 'error', 'message': 'Note not found or not yours.'}), 404
+    
+    # If found, delete it
+    db.session.delete(note_to_delete)
+    db.session.commit()
+    
+    return jsonify({'status': 'success', 'message': 'Note deleted successfully.'}), 200

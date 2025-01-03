@@ -15,8 +15,7 @@
     <!-- Hidden CSRF token (if needed) -->
     <script>
         var csrfToken = "{{ csrf_token }}";
-    </script>
-    
+    </script>    
     <input type="hidden" id="csrf_token" value="{{ csrf_token() or '' }}">
     
     <div class="row">
@@ -81,19 +80,31 @@
         <div class="col-md-4">
             <h3 class="mb-3">Patient Notes</h3>
             {% if selected_patient_id %}
+                <!-- 1) Add note form -->
                 <form method="POST" class="mb-3" id="notesForm">
-                    <!-- Put the CSRF token in a hidden input so it is part of the form data -->
+                    <!-- Hidden CSRF token -->
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    
+
                     <textarea name="note" class="form-control mb-2" placeholder="Enter a note..." required></textarea>
                     <button type="submit" class="btn btn-primary">Add Note</button>
                 </form>
 
-                <!-- Give the notes list an ID so we can append to it in JS -->
+                <!-- 2) Existing notes list -->
                 <ul class="list-group" id="notesList">
                     {% for note in notes %}
-                        <li class="list-group-item">
-                            <strong>{{ note.date_created.strftime('%Y-%m-%d %H:%M:%S') }}</strong>: {{ note.note }}
+                        <li 
+                            class="list-group-item d-flex justify-content-between align-items-center" 
+                            id="note-{{ note.id }}"
+                        >
+                            <span>
+                                <strong>{{ note.date_created.strftime('%Y-%m-%d %H:%M:%S') }}</strong>: {{ note.note }}
+                            </span>
+                            <button 
+                                class="btn btn-sm btn-danger" 
+                                onclick="deleteNote({{ note.id }})"
+                            >
+                                Delete
+                            </button>
                         </li>
                     {% endfor %}
                 </ul>
@@ -101,62 +112,116 @@
                 <p>Please select a patient to view and add notes.</p>
             {% endif %}
         </div>
-    </div> <!-- .row -->
+</div> <!-- .row -->
 </div> <!-- .container -->
 
-<!-- Script to handle CSRF for notes -->
+<!-- Script to handle adding notes -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('notesForm');
-    const notesList = document.getElementById('notesList');  // our <ul> element
+    const notesList = document.getElementById('notesList');
 
     if (form) {
         form.addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent normal form submission
+            event.preventDefault(); // Prevent page reload
             const formData = new FormData(form);
 
-            fetch("{{ url_for('data_view.user_data', patient_id=selected_patient_id if selected_patient_id else None) }}", {
+            fetch("{{ url_for('data_view.user_data', patient_id=selected_patient_id) }}", {
                 method: 'POST',
                 body: formData,
                 headers: {
                     // Send the CSRF token from the hidden input via a custom header
                     "X-CSRFToken": formData.get('csrf_token'),
                 },
-                credentials: 'same-origin'  // Ensures cookies (thus session) are sent
+                credentials: 'same-origin'
             })
             .then(response => {
-                if (response.ok) {
-                    // We expect a JSON response from the backend
-                    return response.json();
+                if (!response.ok) {
+                    throw new Error('Network response was not ok, status=' + response.status);
                 }
-                throw new Error('Network response was not ok.');
+                return response.json();
             })
             .then(data => {
                 console.log('Success:', data);
-                
-                if (data.status === 'success' && data.new_note) {
-                    // Create a new <li> element with the fresh note
-                    const li = document.createElement('li');
-                    li.classList.add('list-group-item');
-                    li.innerHTML = `
-                        <strong>${data.new_note.date_created}</strong>: ${data.new_note.note}
-                    `;
-                    // Insert the new note at the top (or use append() to put it at the bottom)
-                    notesList.prepend(li);
 
-                    // Clear the textarea
+                if (data.status === 'success' && data.new_note) {
+                    // Create a new <li> for the new note
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+                    li.id = `note-${data.new_note.id}`;
+
+                    li.innerHTML = `
+                        <span>
+                            <strong>${data.new_note.date_created}</strong>: ${data.new_note.note}
+                        </span>
+                        <button 
+                            class="btn btn-sm btn-danger" 
+                            onclick="deleteNote(${data.new_note.id})"
+                        >
+                            Delete
+                        </button>
+                    `;
+
+                    // Add it to the top of the list
+                    notesList.prepend(li);
                     form.reset();
                 } else {
                     console.error('Error adding note:', data.message);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Add note error:', error);
             });
         });
     }
 });
 </script>
+
+<!-- Script to handle deleting notes -->
+<script>
+  // This should produce "/delete_note/0"
+  const deleteUrlTemplate = "{{ url_for('data_view.delete_note', note_id=0) }}";
+
+  function deleteNote(noteId) {
+    // 1) Grab CSRF token from hidden input
+    const csrfTokenElem = document.querySelector('input[name="csrf_token"]');
+    const csrfToken = csrfTokenElem ? csrfTokenElem.value : '';
+
+    // 2) Build the final URL for this noteId
+    // e.g. "/delete_note/42" if noteId=42
+    const deleteUrl = deleteUrlTemplate.replace('/0', '/' + noteId);
+
+    // 3) Fire off the POST request with CSRF
+    fetch(deleteUrl, {
+      method: 'POST',
+      headers: {
+        "X-CSRFToken": csrfToken
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Network response was not ok, status=${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.status === 'success') {
+        // Remove the note DOM element
+        const li = document.getElementById(`note-${noteId}`);
+        if (li) {
+          li.remove();
+        }
+      } else {
+        console.error('Delete error:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Delete note error:', error);
+    });
+  }
+</script>
+
 
 
 <!-- Include your modals (patient selection & new test) -->
