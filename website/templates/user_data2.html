@@ -4,13 +4,15 @@
 
 {% block content %}
 <div class="container my-5" id="dashboard" style="display: none;">
-    <h1 class="text-center mb-5">Patient & Device Data Dashboard</h1>
-    <h3 class="text-center mb-5">
-      Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}
-    </h3>
-    <p class="text-center" style="font-style: italic;">
-      Patient ID: {{ selected_patient_id if selected_patient_id else "N/A" }}
-    </p>
+    <h1 class="text-center mb-3">Patient & Device Data Dashboard</h1>
+    <div class="text-center mb-1">
+        <h3>
+            Currently Viewing: {{ current_patient_name if current_patient_name else "No Patient Selected" }}
+        </h3>
+        <p style="font-style: italic;">
+            Patient ID: {{ selected_patient_id if selected_patient_id else "N/A" }}
+        </p>
+    </div>
 
     <!-- Hidden CSRF token (if needed) -->
     <script>
@@ -18,66 +20,53 @@
     </script>    
     <input type="hidden" id="csrf_token" value="{{ csrf_token() or '' }}">
     
-    <div class="row">
+    <!-- Patient Actions -->
+    <div class="d-flex justify-content-center mb-4">
+        <button class="btn btn-primary mx-2" id="viewTestsBtn">View Past Health Tests</button>
+        <button class="btn btn-success mx-2" id="newTestBtn">Initiate New Test</button>
+        <button class="btn btn-info mx-2" id="patientModalButton">Select Patient</button>
+    </div>
 
-        <!-- Setting up div for lefthand column to hold buttons, dropdowns, and graph -->
-        <div class="col-md-8">
-            <!-- Patient Actions -->
-            <div class="text-center mb-5">
-                <button class="btn btn-primary" id="viewTestsBtn">View Past Health Tests</button>
-                <button class="btn btn-success" id="newTestBtn">Initiate New Test</button>
-            </div>
-
-            <!-- Request Timestamp Selection -->
-            {% if selected_patient_id %}
-            <div class="row mb-4">
-                <div class="col-md-6 mx-auto">
-                    <label for="requestTimestampSelect" class="form-label">
-                        Select a Session (Request Timestamp)
-                    </label>
-                    <select id="requestTimestampSelect" class="form-select">
-                        <!-- "All Sessions" option -->
-                        <option value="" {% if not selected_request_timestamp %}selected{% endif %}>
-                            All Sessions
+    {% if selected_patient_id %}
+        <!-- Request Timestamp Selection -->
+        <div class="row mb-4">
+            <div class="col-md-6 mx-auto">
+                <label for="requestTimestampSelect" class="form-label">
+                    Select a Session (Request Timestamp)
+                </label>
+                <select id="requestTimestampSelect" class="form-select">
+                    <option value="" {% if not selected_request_timestamp %}selected{% endif %}>All Sessions</option>
+                    {% for rt in request_timestamps %}
+                        <option value="{{ rt }}" {% if rt == selected_request_timestamp %}selected{% endif %}>
+                            {{ rt }}
                         </option>
-                        {% for rt in request_timestamps %}
-                            <option value="{{ rt }}"
-                                {% if rt == selected_request_timestamp %}selected{% endif %}
-                            >
-                                {{ rt }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    {% endfor %}
+                </select>
             </div>
-            {% endif %}
+        </div>
 
-            <!-- Chart Type Selection -->
-            {% if selected_patient_id %}
-            <div class="row mb-4">
-                <div class="col-md-6 mx-auto">
-                    <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
-                    <select id="chartTypeSelect" class="form-select">
-                        <option value="line" selected>Line Chart</option>
-                        <!-- Add more chart types if desired -->
-                    </select>
-                </div>
+        <!-- Chart Type Selection -->
+        <div class="row mb-4">
+            <div class="col-md-6 mx-auto">
+                <label for="chartTypeSelect" class="form-label">Select Chart Type</label>
+                <select id="chartTypeSelect" class="form-select">
+                    <option value="line" selected>Line Chart</option>
+                    <!-- Add more chart types if desired -->
+                </select>
             </div>
-            {% endif %}
-            
-            <!-- Chart Area -->
-            {% if selected_patient_id %}
-            <div class="row">
-                <div class="col-md-12">
-                    <canvas id="dataChart" style="max-height: 500px;"></canvas>
-                </div>
-            </div>
-            {% endif %}
-
         </div>
         
-        <!-- Right Column for Patient Notes -->
-        <div class="col-md-4">
+        <!-- Chart Area -->
+        <div class="row">
+            <div class="col-md-12">
+                <canvas id="dataChart" style="max-height: 500px;"></canvas>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Patient Notes Centered Below Chart or in Center Column -->
+    <div class="row">
+        <div class="col-md-12 text-center">
             <h3 class="mb-3">Patient Notes</h3>
             {% if selected_patient_id %}
                 <!-- 1) Add note form -->
@@ -112,7 +101,7 @@
                 <p>Please select a patient to view and add notes.</p>
             {% endif %}
         </div>
-</div> <!-- .row -->
+    </div>
 </div> <!-- .container -->
 
 <!-- Script to handle adding notes -->
@@ -515,6 +504,23 @@ document.addEventListener('DOMContentLoaded', function() {
             newTestModal.hide();
         });
     });
+
+        // ------------------------------------------
+        // Logic for Re-Opening patientModal with Select Patient Button
+        // ------------------------------------------
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1) Grab the modal element by ID
+            const patientModalEl = document.getElementById('patientModal');
+            
+            // 2) Create the Bootstrap modal instance
+            const patientModal = new bootstrap.Modal(patientModalEl);
+            
+            // 3) Add a click listener to your new button to show the modal
+            const patientModalButton = document.getElementById('patientModalButton');
+            patientModalButton.addEventListener('click', function() {
+                patientModal.show();
+            });
+        });
+
 </script>
 {% endblock %}
-
