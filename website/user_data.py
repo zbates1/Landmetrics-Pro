@@ -174,10 +174,12 @@ def user_data():
             db.session.commit()
 
             # Return JSON to let our JavaScript add the new note without refreshing
+            # IMPORTANT: Include "id" in the returned JSON
             return jsonify({
                 'status': 'success',
                 'message': 'Note added successfully',
                 'new_note': {
+                    'id': new_note.id,  # <--- ADD THIS LINE
                     'date_created': new_note.date_created.strftime('%Y-%m-%d %H:%M:%S'),
                     'note': new_note.note
                 }
