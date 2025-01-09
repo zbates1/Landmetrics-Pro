@@ -33,6 +33,12 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # These may need to be deleted 
+    app.config.setdefault("SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:") 
+    app.config.setdefault("SECRET_KEY", "dev")
+    app.config.setdefault("SQLALCHEMY_TRACK_MODIFICATIONS", False)
+
+
     # Initialize extensions
     db.init_app(app)
     csrf.init_app(app)

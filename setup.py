@@ -20,6 +20,7 @@ setup(
         "SQLAlchemy>=2.0.30",
         "Werkzeug>=2.3.8",
         "psycopg2",
+        "pytest>=7.4.2",
     ],
     extras_require={
         "dev": [
