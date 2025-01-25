@@ -52,7 +52,7 @@ def test_add_user(app, capsys):
     """Test that add_user creates a User in the DB and prints expected output."""
     with app.app_context():
         # Verify no users in DB initially
-        assert User.query.count() == 0
+        assert User.query.count() == 0, f'There are {User.query.count()} users in DB, instead of 0, as expected.'
         
         add_user("test_user@example.com", "password123", "TestUser")
         captured = capsys.readouterr()
@@ -62,11 +62,11 @@ def test_add_user(app, capsys):
         
         # Verify user in DB
         user = User.query.filter_by(email="test_user@example.com").first()
-        assert user is not None
-        assert user.first_name == "TestUser"
+        assert user is not None, f'User with email "test_user@example.com" not found in DB.'
+        assert user.first_name == "TestUser", f'User with email "test_user@example.com" has name {user.first_name} instead of "TestUser".'
         # Check that the password is hashed
-        assert user.password != "password123"
-        assert check_password_hash(user.password, "password123")
+        assert user.password != "password123", f'User with email "test_user@example.com" has password {user.password} instead of "password123".'
+        assert check_password_hash(user.password, "password123"), f'User with email "test_user@example.com" password is not hashed.'
 
 
 def test_add_device(app, capsys):
@@ -372,8 +372,7 @@ def test_find_patient_data_by_id_and_timestamp(app, capsys):
         captured = capsys.readouterr()
 
         # Check console output
-        # assert "Querying for patient_id=1 and request_timestamp=2030-05-05 10:30:00" in captured.out
-        assert "DeviceData ID: 1" in captured.out
+        assert "Querying for patient_id=1 and request_timestamp=2030-05-05 10:30:00" in captured.out
         # Confirm the record is found
         assert "Length of data_points for patient TimestampSearch (ID: 1) and request_timestamp 2030-05-05 10:30:00: 1" in captured.out
 
