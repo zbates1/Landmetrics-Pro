@@ -1,7 +1,7 @@
 # test_views.py
 import os
 import pytest
-from datetime import datetime   
+from datetime import datetime, date
 from flask import json
 from website import create_app, db
 from website.models import Device, Patient, DeviceData, User
@@ -63,19 +63,18 @@ def sample_device(sample_user):
 def sample_patient(sample_user):
     """Create and return a sample Patient object with a valid user."""
     from website.models import Patient
-    dob = datetime.datetime(1990, 1, 1)
-    patient_dob = dob.strftime("%x")
+    # Just use a Python date directly:
+    dob = date(1990, 1, 1)
 
     patient = Patient(
         id=123,  # so we can reference this in tests
         name="Test Patient",
-        date_of_birth=patient_dob,
+        date_of_birth=dob,  # must be a date, not a string
         gender="Other",
         injury="TestInjury",
-        user_id=sample_user.id  # link to the user fixture
+        user_id=sample_user.id
     )
     return patient
-
 
 @pytest.fixture
 def api_key():
@@ -163,13 +162,14 @@ def test_receive_data_missing_device_name(client, api_key):
     assert b"Missing 'device_name' or 'timestamps'" in response.data
 
 
-def test_receive_data_invalid_test_name(client, sample_device, sample_patient, api_key):
+def test_receive_data_invalid_test_name(client, sample_device, sample_user, sample_patient, api_key):
     """
     Test posting data with an invalid test_name. 
     Expects a 400 and an error about valid test names.
     """
     with client.application.app_context():
         db.session.add(sample_device)
+        db.session.add(sample_user)
         db.session.add(sample_patient)
         db.session.commit()
 
@@ -250,14 +250,28 @@ def test_receive_data_device_not_found(client, sample_patient, api_key):
     assert b"Device not found" in response.data
 
 
-def test_receive_data_patient_not_found(client, sample_device, api_key):
+def test_receive_data_patient_not_found(client, sample_device, sample_user, sample_patient, api_key):
     """
     Test posting data when the patient doesn't exist in DB.
     Expects 404 with 'Patient not found'.
     """
     with client.application.app_context():
-        db.session.add(sample_device)
+        # db.session.add(sample_device)
+        # db.session.commit()
+
+        # Add and commit the user first
+        db.session.add(sample_user)
         db.session.commit()
+
+        # Now set user_id for device/patient
+        sample_device.user_id = sample_user.id
+        sample_patient.user_id = sample_user.id
+
+        # Commit device/patient
+        db.session.add(sample_device)
+        db.session.add(sample_patient)
+        db.session.commit()
+
 
     data = {
         "device_name": "ABCD1234",
@@ -274,15 +288,36 @@ def test_receive_data_patient_not_found(client, sample_device, api_key):
     assert b"Patient not found" in response.data
 
 
-def test_receive_data_success(client, sample_device, sample_patient, api_key):
+def test_receive_data_success(client, sample_device, sample_user, sample_patient, api_key):
     """
     Test a successful data post with proper JSON and a valid API key.
     Expects status 200 and a success message about data points received.
     """
     with client.application.app_context():
+
+        ###############
+        # Old version that was giving a 'NOT NULL constraint failed: device.user_id' error
+        ###############
+        # db.session.add(sample_device)
+        # db.session.add(sample_patient)
+        # db.session.commit()
+
+        ###############
+        # New version -> FAILED tests/test_views.py::test_receive_data_success - sqlalchemy.orm.exc.UnmappedInstanceError: Class 'builtins.function' is not mapped
+        ###############
+                # Add and commit the user first
+        db.session.add(sample_user)
+        db.session.commit()
+
+        # Now set user_id for device/patient
+        sample_device.user_id = sample_user.id
+        sample_patient.user_id = sample_user.id
+
+        # Commit device/patient
         db.session.add(sample_device)
         db.session.add(sample_patient)
         db.session.commit()
+
     
     data = {
         "device_name": "ABCD1234",

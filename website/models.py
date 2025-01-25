@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 from datetime import date
 
 class User(db.Model, UserMixin): # Note: This is a User class for Healthcare Providers, but renaming to Provider was too confusing
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
     first_name = db.Column(db.String(150))
@@ -38,7 +38,7 @@ class Patient(db.Model):
         return f'<Patient {self.name} (ID: {self.id})>'
     
 class PatientNotes(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     note = db.Column(db.String(10000), nullable=True)
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
@@ -49,7 +49,7 @@ class PatientNotes(db.Model):
 
 
 class Device(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(150))
     type = db.Column(db.String(150))
     serial_number = db.Column(db.String(150), unique=True)
