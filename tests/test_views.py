@@ -168,8 +168,20 @@ def test_receive_data_invalid_test_name(client, sample_device, sample_user, samp
     Expects a 400 and an error about valid test names.
     """
     with client.application.app_context():
-        db.session.add(sample_device)
+        # db.session.add(sample_device) # Gave: NOT NULL constraint failed: device.user_id
+        # db.session.add(sample_user)
+        # db.session.add(sample_patient)
+        # db.session.commit()
+
         db.session.add(sample_user)
+        db.session.commit()
+
+        # Now set user_id for device/patient
+        sample_device.user_id = sample_user.id
+        sample_patient.user_id = sample_user.id
+
+        # Commit device/patient
+        db.session.add(sample_device)
         db.session.add(sample_patient)
         db.session.commit()
 
@@ -189,15 +201,28 @@ def test_receive_data_invalid_test_name(client, sample_device, sample_user, samp
     assert b"Invalid 'test_name'. Must be one of" in response.data
 
 
-def test_receive_data_mismatch_array_lengths(client, sample_device, sample_patient, api_key):
+def test_receive_data_mismatch_array_lengths(client, sample_device, sample_user, sample_patient, api_key):
     """
     Test posting data with array lengths that don't match timestamps.
     Expects a 400 and a 'Mismatch in lengths of data arrays' error.
     """
     with client.application.app_context():
+        # db.session.add(sample_device) # Gave: NOT NULL constraint failed: device.user_id
+        # db.session.add(sample_patient)
+        # db.session.commit()
+
+        db.session.add(sample_user)
+        db.session.commit()
+
+        # Now set user_id for device/patient
+        sample_device.user_id = sample_user.id
+        sample_patient.user_id = sample_user.id
+
+        # Commit device/patient
         db.session.add(sample_device)
         db.session.add(sample_patient)
         db.session.commit()
+
 
     # Here, 'timestamps' has length 2, but 'ax1' has length 1
     data = {
@@ -226,14 +251,28 @@ def test_receive_data_mismatch_array_lengths(client, sample_device, sample_patie
     assert b"Mismatch in lengths of data arrays" in response.data
 
 
-def test_receive_data_device_not_found(client, sample_patient, api_key):
+def test_receive_data_device_not_found(client, sample_user, sample_patient, api_key):
     """
     Test posting data when the device doesn't exist in DB. 
     Expects 404 with 'Device not found'.
     """
     with client.application.app_context():
+        # db.session.add(sample_patient) # Gave: sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: patient.user_id
+        # db.session.commit()
+
+        # Add and commit the user first
+        db.session.add(sample_user)
+        db.session.commit()
+
+        # Now set user_id for device/patient
+        # sample_device.user_id = sample_user.id
+        sample_patient.user_id = sample_user.id
+
+        # Commit device/patient
+        # db.session.add(sample_device)
         db.session.add(sample_patient)
         db.session.commit()
+
 
     data = {
         "device_name": "NONEXISTENT_DEVICE",
