@@ -137,9 +137,13 @@ def test_receive_data_missing_json(client, api_key):
     Test posting to /api/data with a valid API key but no JSON payload.
     Expects a 400 and an error message about missing JSON data.
     """
-    response = client.post('/api/data', headers={"X-API-Key": api_key})
-    assert response.status_code == 415, f'Got status code {response.status_code}, 403 means invalid API key, 415 means unsupported media type'
-    assert b"No JSON data received" in response.data
+    response = client.post(
+        '/api/data',
+        headers={"X-API-Key": api_key, "Content-Type": "application/json"},
+        data="{}"  # or b"{}" or json.dumps({})
+    )
+    assert response.status_code == 400, f'Got status code {response.status_code}, 403 means invalid API key, 415 means unsupported media type'
+    assert b"No JSON data received" in response.data, f'No JSON data received expected in response, got {response.data}'
 
 
 def test_receive_data_missing_device_name(client, api_key):

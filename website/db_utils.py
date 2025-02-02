@@ -22,8 +22,10 @@ from datetime import timedelta
 
 # Add a new user
 def add_user(email, password, first_name):
-    hashed_password = generate_password_hash(password, method='pbkdf2:sha256') # tag: hardcoded encryption
-    new_user = User(email=email, password=hashed_password, first_name=first_name)
+    # UPDATE: Use hashed password
+    # hashed_password = generate_password_hash(password, method='pbkdf2:sha256') # tag: hardcoded encryption
+    # new_user = User(email=email, password=hashed_password, first_name=first_name)
+    new_user = User(email=email, password=password, first_name=first_name)
     db.session.add(new_user)
     db.session.commit()
     print(f'User {email} added successfully!')
