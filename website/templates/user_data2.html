@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // ------------------------------------------
-        // View Past Tests / New Test logic
+        // New Test logic -> essentially just redirect to different html
         // ------------------------------------------
         document.getElementById('viewTestsBtn').addEventListener('click', function() {
             // Redirect to your "view_tests" route
@@ -487,6 +487,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 "{{ url_for('data_view.view_tests') }}?patient_id=" + selectedPatientId
             );
         });
+
+
+        // ------------------------------------------
+        // New Test logic -> Creating buttons, loading modals, and then initiating test, might have some mqtt logic like adding a valid device name
+        // ------------------------------------------
+
 
         const newTestModalEl = document.getElementById('newTestModal');
         const newTestModal = new bootstrap.Modal(newTestModalEl);
